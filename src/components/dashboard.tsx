@@ -164,7 +164,6 @@ export function Dashboard() {
         <Header />
         <div className="flex-1 relative">
             <MapView
-                key={activeFilter}
                 facilities={filteredFacilities}
                 onSelectFacility={handleSelectFacility}
                 selectedFacility={selectedFacility}
