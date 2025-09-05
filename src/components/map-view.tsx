@@ -1,11 +1,11 @@
 "use client";
 
 import * as React from 'react';
-import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import type { AnyFacility } from '@/types';
 import { MapMarker } from './map-marker';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { divIcon, Map as LeafletMap, layerGroup, LayerGroup, Marker as LeafletMarker, LatLngExpression, icon } from 'leaflet';
+import { divIcon, Map as LeafletMap, layerGroup, LayerGroup, Marker as LeafletMarker, LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 interface MapViewProps {
@@ -29,21 +29,27 @@ const createCustomIcon = (facility: AnyFacility, isSelected: boolean) => {
     });
 };
 
-const MapUpdater = ({ facilities, onSelectFacility, selectedFacility, markerLayer }: { facilities: AnyFacility[], onSelectFacility: (f: AnyFacility) => void, selectedFacility: AnyFacility | null, markerLayer: LayerGroup | null }) => {
+const MapUpdater = ({ facilities, onSelectFacility, selectedFacility }: { facilities: AnyFacility[], onSelectFacility: (f: AnyFacility) => void, selectedFacility: AnyFacility | null }) => {
     const map = useMap();
+    const markerLayerRef = React.useRef<LayerGroup | null>(null);
 
     React.useEffect(() => {
-        if (!markerLayer) return;
-        markerLayer.clearLayers();
+        if (!markerLayerRef.current) {
+            markerLayerRef.current = layerGroup().addTo(map);
+        }
+        
+        const layer = markerLayerRef.current;
+        layer.clearLayers();
+        
         facilities.forEach(facility => {
             const isSelected = selectedFacility?.id === facility.id;
             const newMarker = new LeafletMarker([facility.position.lat, facility.position.lng], {
                 icon: createCustomIcon(facility, isSelected)
             });
             newMarker.on('click', () => onSelectFacility(facility));
-            markerLayer.addLayer(newMarker);
+            layer.addLayer(newMarker);
         });
-    }, [facilities, selectedFacility, onSelectFacility, markerLayer]);
+    }, [facilities, selectedFacility, onSelectFacility, map]);
     
     React.useEffect(() => {
         if (selectedFacility) {
@@ -59,25 +65,14 @@ const MapUpdater = ({ facilities, onSelectFacility, selectedFacility, markerLaye
     return null;
 }
 
-
 export default function MapView({ facilities, onSelectFacility, selectedFacility }: MapViewProps) {
-    const [map, setMap] = React.useState<LeafletMap | null>(null);
-    const [markerLayer, setMarkerLayer] = React.useState<LayerGroup | null>(null);
-
-    React.useEffect(() => {
-        if (map) {
-            const layer = layerGroup().addTo(map);
-            setMarkerLayer(layer);
-        }
-    }, [map]);
-
   return (
-    <MapContainer ref={setMap} center={ujjainCenter} zoom={defaultZoom} scrollWheelZoom={true} className='w-full h-full'>
+    <MapContainer center={ujjainCenter} zoom={defaultZoom} scrollWheelZoom={true} className='w-full h-full'>
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <MapUpdater facilities={facilities} onSelectFacility={onSelectFacility} selectedFacility={selectedFacility} markerLayer={markerLayer} />
+      <MapUpdater facilities={facilities} onSelectFacility={onSelectFacility} selectedFacility={selectedFacility} />
     </MapContainer>
   );
 }
