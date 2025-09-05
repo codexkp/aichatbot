@@ -27,7 +27,7 @@ import { Loader2, Navigation, ParkingCircle, Hotel, Siren } from "lucide-react";
 import { analyzeParkingCrowding } from "@/ai/flows/crowding-analysis-and-alert";
 import { useToast } from "@/hooks/use-toast";
 
-const MapView = dynamic(() => import('@/components/map-view').then(mod => mod.MapView), {
+const MapView = dynamic(() => import('@/components/map-view'), {
   ssr: false,
   loading: () => <div className="w-full h-full bg-muted flex items-center justify-center"><Loader2 className="h-10 w-10 animate-spin" /></div>
 });
