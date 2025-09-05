@@ -6,8 +6,14 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Logo } from "./logo";
+import * as React from "react";
 
-export function Header() {
+interface HeaderProps {
+  isChatbotOpen: boolean;
+  onChatbotOpenChange: (open: boolean) => void;
+}
+
+export function Header({ isChatbotOpen, onChatbotOpenChange }: HeaderProps) {
   const isMobile = useIsMobile();
 
   return (
@@ -17,7 +23,7 @@ export function Header() {
         {isMobile && <Logo isMobile={true} />}
       </div>
       
-      <ChatbotDialog>
+      <ChatbotDialog open={isChatbotOpen} onOpenChange={onChatbotOpenChange}>
         <Button variant="outline" className="bg-transparent">
           <MessageCircle className="mr-2 h-4 w-4" />
           Chatbot

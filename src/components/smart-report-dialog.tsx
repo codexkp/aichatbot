@@ -22,8 +22,13 @@ interface Message {
   content: string;
 }
 
-export function ChatbotDialog({ children }: { children: ReactNode }) {
-  const [open, setOpen] = useState(false);
+interface ChatbotDialogProps {
+  children: ReactNode;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function ChatbotDialog({ children, open, onOpenChange }: ChatbotDialogProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -83,7 +88,7 @@ export function ChatbotDialog({ children }: { children: ReactNode }) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px] md:max-w-lg flex flex-col h-[70vh]">
         <DialogHeader>

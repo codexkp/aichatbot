@@ -39,6 +39,7 @@ export function Dashboard() {
   const [activeFilter, setActiveFilter] = React.useState<FilterType>("all");
   const [selectedFacility, setSelectedFacility] = React.useState<AnyFacility | null>(null);
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
+  const [isChatbotOpen, setIsChatbotOpen] = React.useState(false);
   const { toast } = useToast();
 
   const handleSelectFacility = React.useCallback((facility: AnyFacility) => {
@@ -159,13 +160,15 @@ export function Dashboard() {
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
-        <Header />
+        <Header isChatbotOpen={isChatbotOpen} onChatbotOpenChange={setIsChatbotOpen}/>
         <div className="flex-1 relative">
+          <div className={isChatbotOpen ? 'hidden' : 'block w-full h-full'}>
             <MapView
                 facilities={filteredFacilities}
                 onSelectFacility={handleSelectFacility}
                 selectedFacility={selectedFacility}
             />
+          </div>
         </div>
       </SidebarInset>
     </SidebarProvider>
