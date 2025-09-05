@@ -53,7 +53,7 @@ export function ChatbotDialog({ children }: { children: ReactNode }) {
         content: m.content
       }));
 
-      const stream = chat({ history: chatHistory.slice(0, -1), message: input });
+      const stream = await chat({ history: chatHistory.slice(0, -1), message: input });
 
       let modelMessage: Message = { role: "model", content: "" };
       setMessages(prev => [...prev, modelMessage]);
