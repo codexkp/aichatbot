@@ -21,33 +21,22 @@ const ChatInputSchema = z.object({
 });
 export type ChatInput = z.infer<typeof ChatInputSchema>;
 
-const ChatOutputSchema = z.object({
-  content: z.string(),
-});
-export type ChatOutput = z.infer<typeof ChatOutputSchema>;
+export type ChatOutput = AsyncGenerator<string>;
 
-export async function chat(input: ChatInput): Promise<ChatOutput> {
-  return chatFlow(input);
-}
+export async function* chat(input: ChatInput): ChatOutput {
+  const {history, message} = input;
+  const {stream} = ai.generateStream({
+    history: history.map(
+      h =>
+        ({
+          role: h.role,
+          content: [{text: h.content}],
+        } as MessageData)
+    ),
+    prompt: message,
+  });
 
-const chatFlow = ai.defineFlow(
-  {
-    name: 'chatFlow',
-    inputSchema: ChatInputSchema,
-    outputSchema: ChatOutputSchema,
-  },
-  async input => {
-    const {history, message} = input;
-    const {output} = await ai.generate({
-      history: history.map(
-        h =>
-          ({
-            role: h.role,
-            content: [{text: h.content}],
-          } as MessageData)
-      ),
-      prompt: message,
-    });
-    return {content: output?.text ?? ''};
+  for await (const chunk of stream) {
+    yield chunk.text ?? '';
   }
-);
+}

@@ -37,24 +37,39 @@ export function ChatbotDialog({ children }: { children: ReactNode }) {
       });
     }
   }, [messages]);
-  
+
   const handleSend = async () => {
     if (input.trim() === "") return;
 
     const userMessage: Message = { role: "user", content: input };
-    setMessages((prev) => [...prev, userMessage]);
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
     setInput("");
     setIsLoading(true);
 
     try {
-      const chatHistory = messages.map(m => ({
+      const chatHistory = newMessages.map(m => ({
         role: m.role,
         content: m.content
       }));
 
-      const result = await chat({ history: chatHistory, message: input });
-      const modelMessage: Message = { role: "model", content: result.content };
-      setMessages((prev) => [...prev, modelMessage]);
+      const stream = chat({ history: chatHistory.slice(0, -1), message: input });
+
+      let modelMessage: Message = { role: "model", content: "" };
+      setMessages(prev => [...prev, modelMessage]);
+      
+      let content = '';
+      for await (const chunk of stream) {
+        content += chunk;
+        setMessages(prev => {
+            const lastMsg = prev[prev.length - 1];
+            if (lastMsg.role === 'model') {
+                return [...prev.slice(0, -1), { ...lastMsg, content }];
+            }
+            return prev;
+        });
+      }
+
     } catch (error) {
       console.error("Chatbot error:", error);
       const errorMessage: Message = {
@@ -109,7 +124,7 @@ export function ChatbotDialog({ children }: { children: ReactNode }) {
                 )}
               </div>
             ))}
-             {isLoading && (
+             {isLoading && messages[messages.length-1]?.role !== 'model' && (
               <div className="flex items-start gap-3 justify-start">
                   <Avatar className="w-8 h-8">
                     <AvatarFallback>AI</AvatarFallback>
