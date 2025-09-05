@@ -5,7 +5,7 @@ import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import type { AnyFacility } from '@/types';
 import { MapMarker } from './map-marker';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { divIcon, Map as LeafletMap, layerGroup, LayerGroup, Marker as LeafletMarker, LatLngExpression } from 'leaflet';
+import { divIcon, layerGroup, LayerGroup, Marker as LeafletMarker, LatLngExpression, Map } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 interface MapViewProps {
