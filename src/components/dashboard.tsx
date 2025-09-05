@@ -179,7 +179,7 @@ export function Dashboard() {
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
-        <Header isChatbotOpen={isChatbotOpen} onChatbotOpenChange={setIsChatbotOpen}/>
+        <Header isChatbotOpen={isChatbotOpen} onChatbotOpenChange={setIsChatbotOpen} userPosition={userPosition}/>
         <div className="flex-1 relative">
           <div className={isChatbotOpen ? 'hidden' : 'block w-full h-full'}>
             <MapView

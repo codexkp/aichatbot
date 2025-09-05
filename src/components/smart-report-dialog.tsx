@@ -16,6 +16,7 @@ import { Loader2, Send } from "lucide-react";
 import { chat } from "@/ai/flows/chatbot";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "./ui/avatar";
+import type { Position } from "@/types";
 
 interface Message {
   role: "user" | "model";
@@ -26,9 +27,10 @@ interface ChatbotDialogProps {
   children: ReactNode;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  userPosition: Position | null;
 }
 
-export function ChatbotDialog({ children, open, onOpenChange }: ChatbotDialogProps) {
+export function ChatbotDialog({ children, open, onOpenChange, userPosition }: ChatbotDialogProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -58,7 +60,11 @@ export function ChatbotDialog({ children, open, onOpenChange }: ChatbotDialogPro
         content: m.content
       }));
 
-      const stream = await chat({ history: chatHistory.slice(0, -1), message: input });
+      const stream = await chat({ 
+        history: chatHistory.slice(0, -1), 
+        message: input,
+        userPosition: userPosition || undefined,
+      });
 
       let modelMessage: Message = { role: "model", content: "" };
       setMessages(prev => [...prev, modelMessage]);

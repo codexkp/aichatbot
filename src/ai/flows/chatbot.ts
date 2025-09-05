@@ -13,6 +13,7 @@ import {z} from 'genkit';
 import {MessageData} from 'genkit/model';
 import {getDirections} from '../tools/routing';
 import {initialFacilities} from '@/lib/data';
+import type { Position } from '@/types';
 
 const ChatInputSchema = z.object({
   history: z.array(
@@ -22,15 +23,28 @@ const ChatInputSchema = z.object({
     })
   ),
   message: z.string(),
+  userPosition: z.object({
+    lat: z.number(),
+    lng: z.number(),
+  }).optional(),
 });
 export type ChatInput = z.infer<typeof ChatInputSchema>;
 
 export type ChatOutput = AsyncGenerator<string>;
 
 export async function* chat(input: ChatInput): ChatOutput {
-  const {history, message} = input;
+  const {history, message, userPosition} = input;
 
   const facilityList = initialFacilities.map(f => f.name).join(', ');
+
+  let systemPrompt = `You are a helpful assistant for the Simhastha 2028 event in Ujjain.
+    The user may ask for directions. If so, use the getDirections tool.
+    Available facilities: ${facilityList}.`;
+
+  if (userPosition) {
+    systemPrompt += `\nThe user's current location is available. If they ask for directions from their current location, "here", or similar, use the provided coordinates as the starting point. The user's location is ${userPosition.lat},${userPosition.lng}.`;
+  }
+
 
   const {stream} = ai.generateStream({
     history: history.map(
@@ -42,9 +56,7 @@ export async function* chat(input: ChatInput): ChatOutput {
     ),
     prompt: message,
     tools: [getDirections],
-    system: `You are a helpful assistant for the Simhastha 2028 event in Ujjain.
-    The user may ask for directions. If so, use the getDirections tool.
-    Available facilities: ${facilityList}.`,
+    system: systemPrompt,
   });
 
   for await (const chunk of stream) {

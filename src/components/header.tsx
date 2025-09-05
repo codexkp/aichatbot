@@ -7,13 +7,15 @@ import { MessageCircle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Logo } from "./logo";
 import * as React from "react";
+import type { Position } from "@/types";
 
 interface HeaderProps {
   isChatbotOpen: boolean;
   onChatbotOpenChange: (open: boolean) => void;
+  userPosition: Position | null;
 }
 
-export function Header({ isChatbotOpen, onChatbotOpenChange }: HeaderProps) {
+export function Header({ isChatbotOpen, onChatbotOpenChange, userPosition }: HeaderProps) {
   const isMobile = useIsMobile();
 
   return (
@@ -23,7 +25,7 @@ export function Header({ isChatbotOpen, onChatbotOpenChange }: HeaderProps) {
         {isMobile && <Logo isMobile={true} />}
       </div>
       
-      <ChatbotDialog open={isChatbotOpen} onOpenChange={onChatbotOpenChange}>
+      <ChatbotDialog open={isChatbotOpen} onOpenChange={onChatbotOpenChange} userPosition={userPosition}>
         <Button variant="outline" className="bg-transparent">
           <MessageCircle className="mr-2 h-4 w-4" />
           Chatbot

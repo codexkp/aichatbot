@@ -13,7 +13,7 @@ import {initialFacilities} from '@/lib/data';
 const GetDirectionsInputSchema = z.object({
   start: z
     .string()
-    .describe('The name of the starting facility. Must be one of the available facilities.'),
+    .describe('The name of the starting facility or the coordinates (lat,lng) of the starting location. Must be one of the available facilities if a name is provided.'),
   destination: z
     .string()
     .describe('The name of the destination facility. Must be one of the available facilities.'),
@@ -23,34 +23,42 @@ export const getDirections = ai.defineTool(
   {
     name: 'getDirections',
     description:
-      'Get directions between two facilities in Ujjain for Simhastha 2028.',
+      'Get directions between two locations in Ujjain for Simhastha 2028. The start location can be a facility name or a latitude,longitude string.',
     inputSchema: GetDirectionsInputSchema,
     outputSchema: z.string().describe('A URL with the directions.'),
   },
   async ({start, destination}) => {
-    const startFacility = initialFacilities.find(
-      f => f.name.toLowerCase() === start.toLowerCase()
-    );
+    let fromLat: number, fromLng: number;
+
+    // Check if start is coordinates
+    const coords = start.split(',').map(Number);
+    if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+        [fromLat, fromLng] = coords;
+    } else {
+        const startFacility = initialFacilities.find(
+          f => f.name.toLowerCase() === start.toLowerCase()
+        );
+        if (!startFacility) {
+            let message = `Could not find starting location: ${start}. `;
+            const availableFacilities = initialFacilities.map(f => f.name).join(', ');
+            message += `Available locations are: ${availableFacilities}`;
+            return message;
+        }
+        fromLat = startFacility.position.lat;
+        fromLng = startFacility.position.lng;
+    }
+
     const destFacility = initialFacilities.find(
       f => f.name.toLowerCase() === destination.toLowerCase()
     );
 
-    if (!startFacility || !destFacility) {
-      let message = '';
-      if (!startFacility)
-        message += `Could not find starting location: ${start}. `;
-      if (!destFacility)
-        message += `Could not find destination location: ${destination}.`;
-      
+    if (!destFacility) {
+      let message = `Could not find destination location: ${destination}.`;
       const availableFacilities = initialFacilities.map(f => f.name).join(', ');
       message += `Available locations are: ${availableFacilities}`;
-      
       return message;
     }
 
-    const {
-      position: {lat: fromLat, lng: fromLng},
-    } = startFacility;
     const {
       position: {lat: toLat, lng: toLng},
     } = destFacility;
