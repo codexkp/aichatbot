@@ -60,4 +60,4 @@ function _MapView({ facilities, onSelectFacility, selectedFacility }: MapViewPro
   );
 }
 
-export const MapView = _MapView;
+export const MapView = React.memo(_MapView);

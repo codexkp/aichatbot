@@ -32,8 +32,6 @@ const MapView = dynamic(() => import('@/components/map-view').then(mod => mod.Ma
   loading: () => <div className="w-full h-full bg-muted flex items-center justify-center"><Loader2 className="h-10 w-10 animate-spin" /></div>
 });
 
-const MemoizedMap = React.memo(MapView);
-
 type FilterType = "all" | "parking" | "hotel" | "emergency";
 
 export function Dashboard() {
@@ -163,7 +161,7 @@ export function Dashboard() {
       <SidebarInset>
         <Header />
         <div className="flex-1 relative">
-            <MemoizedMap
+            <MapView
                 facilities={filteredFacilities}
                 onSelectFacility={handleSelectFacility}
                 selectedFacility={selectedFacility}
