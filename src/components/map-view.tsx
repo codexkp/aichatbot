@@ -23,7 +23,7 @@ const RecenterAutomatically = ({lat,lng}: {lat: number, lng: number}) => {
      return null;
 }
 
-export function MapView({ facilities, onSelectFacility, selectedFacility }: MapViewProps) {
+function _MapView({ facilities, onSelectFacility, selectedFacility }: MapViewProps) {
   
   const createCustomIcon = (facility: AnyFacility, isSelected: boolean) => {
     const markerHtml = renderToStaticMarkup(
@@ -59,3 +59,5 @@ export function MapView({ facilities, onSelectFacility, selectedFacility }: MapV
     </MapContainer>
   );
 }
+
+export const MapView = React.memo(_MapView);
