@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect, type ReactNode } from "react";
@@ -28,6 +29,22 @@ interface ChatbotDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userPosition: Position | null;
+}
+
+const renderMessageContent = (content: string) => {
+  if (content.startsWith("https://")) {
+    return (
+      <a
+        href={content}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-sm text-blue-600 underline hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+      >
+        Click here for directions
+      </a>
+    );
+  }
+  return <p className="text-sm whitespace-pre-wrap">{content}</p>;
 }
 
 export function ChatbotDialog({ children, open, onOpenChange, userPosition }: ChatbotDialogProps) {
@@ -126,7 +143,7 @@ export function ChatbotDialog({ children, open, onOpenChange, userPosition }: Ch
                       : "bg-muted"
                   )}
                 >
-                  <p className="text-sm">{message.content}</p>
+                  {renderMessageContent(message.content)}
                 </div>
                 {message.role === "user" && (
                   <Avatar className="w-8 h-8">
