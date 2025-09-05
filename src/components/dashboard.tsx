@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/sidebar";
 import {
   initialFacilities,
-  parkingFacilities as initialParking,
 } from "@/lib/data";
 import type { AnyFacility, Parking } from "@/types";
 import { Header } from "@/components/header";
@@ -33,29 +32,31 @@ const MapView = dynamic(() => import('@/components/map-view').then(mod => mod.Ma
   loading: () => <div className="w-full h-full bg-muted flex items-center justify-center"><Loader2 className="h-10 w-10 animate-spin" /></div>
 });
 
+const MemoizedMap = React.memo(MapView);
 
 type FilterType = "all" | "parking" | "hotel" | "emergency";
 
 export function Dashboard() {
   const [facilities, setFacilities] = React.useState<AnyFacility[]>(initialFacilities);
-  const [filteredFacilities, setFilteredFacilities] = React.useState<AnyFacility[]>(initialFacilities);
-  const [selectedFacility, setSelectedFacility] = React.useState<AnyFacility | null>(null);
   const [activeFilter, setActiveFilter] = React.useState<FilterType>("all");
+  const [selectedFacility, setSelectedFacility] = React.useState<AnyFacility | null>(null);
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
   const { toast } = useToast();
 
-  React.useEffect(() => {
-    let newFilteredFacilities = facilities;
-    if (activeFilter !== "all") {
-      newFilteredFacilities = facilities.filter((f) => f.type === activeFilter);
+  const handleSelectFacility = React.useCallback((facility: AnyFacility) => {
+    setSelectedFacility(facility);
+  }, []);
+
+  const filteredFacilities = React.useMemo(() => {
+    if (activeFilter === "all") {
+      return facilities;
     }
-    setFilteredFacilities(newFilteredFacilities);
-    setSelectedFacility(null);
+    return facilities.filter((f) => f.type === activeFilter);
   }, [activeFilter, facilities]);
 
-  const handleSelectFacility = (facility: AnyFacility) => {
-    setSelectedFacility(facility);
-  };
+  React.useEffect(() => {
+    setSelectedFacility(null);
+  }, [activeFilter]);
 
   const handleAnalyzeCrowding = async () => {
     setIsAnalyzing(true);
@@ -80,7 +81,6 @@ export function Dashboard() {
             const isSuggested = suggestedNames.includes(f.name);
             if (isSuggested) return { ...f, status: 'alternative' };
 
-            // Mark lots with high occupancy as crowded, unless they are the alternative
             if (f.occupancy / f.capacity > 0.8) return { ...f, status: 'crowded' };
             
             return { ...f, status: 'normal' };
@@ -163,7 +163,7 @@ export function Dashboard() {
       <SidebarInset>
         <Header />
         <div className="flex-1 relative">
-            <MapView
+            <MemoizedMap
                 facilities={filteredFacilities}
                 onSelectFacility={handleSelectFacility}
                 selectedFacility={selectedFacility}
