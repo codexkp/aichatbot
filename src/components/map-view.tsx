@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from 'react';
-import type { AnyFacility } from '@/types';
+import type { AnyFacility, Position } from '@/types';
 import { MapMarker } from './map-marker';
 import { renderToStaticMarkup } from 'react-dom/server';
 import L, { divIcon, layerGroup, LayerGroup, Marker as LeafletMarker, LatLngExpression } from 'leaflet';
@@ -11,12 +11,13 @@ interface MapViewProps {
   facilities: AnyFacility[];
   onSelectFacility: (facility: AnyFacility) => void;
   selectedFacility: AnyFacility | null;
+  userPosition: Position | null;
 }
 
 const ujjainCenter: LatLngExpression = [23.1793, 75.7849];
 const defaultZoom = 13;
 
-const createCustomIcon = (facility: AnyFacility, isSelected: boolean) => {
+const createCustomIcon = (facility: AnyFacility | { type: 'user' }, isSelected: boolean) => {
     const markerHtml = renderToStaticMarkup(
       <MapMarker facility={facility} isSelected={isSelected} />
     );
@@ -28,10 +29,11 @@ const createCustomIcon = (facility: AnyFacility, isSelected: boolean) => {
     });
 };
 
-export default function MapView({ facilities, onSelectFacility, selectedFacility }: MapViewProps) {
+export default function MapView({ facilities, onSelectFacility, selectedFacility, userPosition }: MapViewProps) {
   const mapRef = React.useRef<HTMLDivElement>(null);
   const mapInstanceRef = React.useRef<L.Map | null>(null);
   const markerLayerRef = React.useRef<LayerGroup | null>(null);
+  const userMarkerRef = React.useRef<LeafletMarker | null>(null);
 
   React.useEffect(() => {
     if (mapRef.current && !mapInstanceRef.current) {
@@ -69,6 +71,24 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
         layer.addLayer(newMarker);
     });
   }, [facilities, selectedFacility, onSelectFacility]);
+  
+  React.useEffect(() => {
+    if (mapInstanceRef.current && userPosition) {
+      if (userMarkerRef.current) {
+        userMarkerRef.current.setLatLng([userPosition.lat, userPosition.lng]);
+      } else {
+        const marker = new LeafletMarker([userPosition.lat, userPosition.lng], {
+          icon: createCustomIcon({ type: 'user' }, false),
+          zIndexOffset: 1000
+        });
+        if(mapInstanceRef.current) {
+            marker.addTo(mapInstanceRef.current);
+            userMarkerRef.current = marker;
+        }
+      }
+      mapInstanceRef.current.setView([userPosition.lat, userPosition.lng], 15);
+    }
+  }, [userPosition]);
   
   React.useEffect(() => {
     if (mapInstanceRef.current && selectedFacility) {

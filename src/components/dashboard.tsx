@@ -18,12 +18,12 @@ import {
 import {
   initialFacilities,
 } from "@/lib/data";
-import type { AnyFacility, Parking } from "@/types";
+import type { AnyFacility, Parking, Position } from "@/types";
 import { Header } from "@/components/header";
 import { Logo } from "@/components/logo";
 import { FacilityCard } from "@/components/facility-card";
 import { Button } from "./ui/button";
-import { Loader2, Navigation, ParkingCircle, Hotel, Siren } from "lucide-react";
+import { Loader2, Navigation, ParkingCircle, Hotel, Siren, LocateFixed } from "lucide-react";
 import { analyzeParkingCrowding } from "@/ai/flows/crowding-analysis-and-alert";
 import { useToast } from "@/hooks/use-toast";
 
@@ -40,6 +40,7 @@ export function Dashboard() {
   const [selectedFacility, setSelectedFacility] = React.useState<AnyFacility | null>(null);
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
   const [isChatbotOpen, setIsChatbotOpen] = React.useState(false);
+  const [userPosition, setUserPosition] = React.useState<Position | null>(null);
   const { toast } = useToast();
 
   const handleSelectFacility = React.useCallback((facility: AnyFacility) => {
@@ -56,6 +57,24 @@ export function Dashboard() {
   React.useEffect(() => {
     setSelectedFacility(null);
   }, [activeFilter]);
+  
+  React.useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserPosition({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+      },
+      () => {
+        toast({
+          title: 'Location Access Denied',
+          description: "We couldn't access your location. Please enable it in your browser settings.",
+          variant: 'destructive',
+        });
+      }
+    );
+  }, [toast]);
 
   const handleAnalyzeCrowding = async () => {
     setIsAnalyzing(true);
@@ -167,6 +186,7 @@ export function Dashboard() {
                 facilities={filteredFacilities}
                 onSelectFacility={handleSelectFacility}
                 selectedFacility={selectedFacility}
+                userPosition={userPosition}
             />
           </div>
         </div>
