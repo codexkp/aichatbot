@@ -42,7 +42,9 @@ export async function* chat(input: ChatInput): ChatOutput {
     Available facilities: ${facilityList}.`;
 
   if (userPosition) {
-    systemPrompt += `\nThe user's current location is available. If they ask for directions from their current location, "here", or similar, use the provided coordinates as the starting point. The user's location is ${userPosition.lat},${userPosition.lng}.`;
+    systemPrompt += `\nThe user's current location is available and is at ${userPosition.lat},${userPosition.lng}. When the user asks for directions from 'here' or their 'current location', use these coordinates as the starting point.`;
+  } else {
+    systemPrompt += `\nThe user's location has not been shared. If the user asks for directions without specifying a starting point, you must ask them for a starting facility from the available list. Do not try to guess their location.`;
   }
 
 
