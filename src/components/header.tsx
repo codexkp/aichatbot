@@ -1,9 +1,9 @@
 "use client";
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { SmartReportDialog } from "@/components/smart-report-dialog";
+import { ChatbotDialog } from "@/components/smart-report-dialog";
 import { Button } from "@/components/ui/button";
-import { MessageSquarePlus } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Logo } from "./logo";
 
@@ -17,12 +17,12 @@ export function Header() {
         {isMobile && <Logo isMobile={true} />}
       </div>
       
-      <SmartReportDialog>
+      <ChatbotDialog>
         <Button variant="outline" className="bg-transparent">
-          <MessageSquarePlus className="mr-2 h-4 w-4" />
-          Smart Report
+          <MessageCircle className="mr-2 h-4 w-4" />
+          Chatbot
         </Button>
-      </SmartReportDialog>
+      </ChatbotDialog>
     </header>
   );
 }

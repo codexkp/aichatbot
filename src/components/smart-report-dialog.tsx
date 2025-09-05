@@ -1,138 +1,147 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { useState, useRef, useEffect, type ReactNode } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
+import { Loader2, Send } from "lucide-react";
+import { chat } from "@/ai/flows/chatbot";
+import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback } from "./ui/avatar";
 
-const reportSchema = z.object({
-  facilityType: z.enum(["parking", "hotel", "emergency", "other"]),
-  facilityName: z.string().min(1, "Facility name is required"),
-  details: z.string().min(10, "Please provide at least 10 characters"),
-});
+interface Message {
+  role: "user" | "model";
+  content: string;
+}
 
-type ReportFormValues = z.infer<typeof reportSchema>;
-
-export function SmartReportDialog({ children }: { children: ReactNode }) {
+export function ChatbotDialog({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
-  const { toast } = useToast();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  const form = useForm<ReportFormValues>({
-    resolver: zodResolver(reportSchema),
-    defaultValues: {
-      facilityName: "",
-      details: "",
-    },
-  });
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTo({
+        top: scrollAreaRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [messages]);
+  
+  const handleSend = async () => {
+    if (input.trim() === "") return;
 
-  const onSubmit = (data: ReportFormValues) => {
-    console.log("Smart Report Submitted:", data);
-    toast({
-      title: "Report Submitted",
-      description: "Thank you for your feedback!",
-    });
-    setOpen(false);
-    form.reset();
+    const userMessage: Message = { role: "user", content: input };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setIsLoading(true);
+
+    try {
+      const chatHistory = messages.map(m => ({
+        role: m.role,
+        content: m.content
+      }));
+
+      const result = await chat({ history: chatHistory, message: input });
+      const modelMessage: Message = { role: "model", content: result.content };
+      setMessages((prev) => [...prev, modelMessage]);
+    } catch (error) {
+      console.error("Chatbot error:", error);
+      const errorMessage: Message = {
+        role: "model",
+        content: "Sorry, I'm having trouble connecting. Please try again later.",
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] md:max-w-lg flex flex-col h-[70vh]">
         <DialogHeader>
-          <DialogTitle className="font-headline">Smart Report</DialogTitle>
+          <DialogTitle className="font-headline">Chatbot</DialogTitle>
           <DialogDescription>
-            Report an issue or share your experience. Your feedback helps us improve.
+            Ask me anything about Simhastha 2028.
           </DialogDescription>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="facilityType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Facility Type</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a facility type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="parking">Parking</SelectItem>
-                      <SelectItem value="hotel">Hotel</SelectItem>
-                      <SelectItem value="emergency">Emergency</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="facilityName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Facility Name / Location</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Ramghat Parking Lot" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="details"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Details</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Describe the issue or your feedback..."
-                      className="resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter>
-              <Button type="submit">Submit Report</Button>
-            </DialogFooter>
-          </form>
-        </Form>
+        <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
+          <div className="space-y-4">
+            {messages.map((message, index) => (
+              <div
+                key={index}
+                className={cn(
+                  "flex items-start gap-3",
+                  message.role === "user" ? "justify-end" : "justify-start"
+                )}
+              >
+                {message.role === "model" && (
+                  <Avatar className="w-8 h-8">
+                    <AvatarFallback>AI</AvatarFallback>
+                  </Avatar>
+                )}
+                <div
+                  className={cn(
+                    "rounded-lg px-3 py-2 max-w-[80%]",
+                    message.role === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted"
+                  )}
+                >
+                  <p className="text-sm">{message.content}</p>
+                </div>
+                {message.role === "user" && (
+                  <Avatar className="w-8 h-8">
+                    <AvatarFallback>U</AvatarFallback>
+                  </Avatar>
+                )}
+              </div>
+            ))}
+             {isLoading && (
+              <div className="flex items-start gap-3 justify-start">
+                  <Avatar className="w-8 h-8">
+                    <AvatarFallback>AI</AvatarFallback>
+                  </Avatar>
+                  <div className="rounded-lg px-3 py-2 bg-muted">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  </div>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+        <div className="p-4 border-t">
+            <div className="relative">
+                <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                placeholder="Type your message..."
+                className="pr-12"
+                disabled={isLoading}
+                />
+                <Button
+                type="submit"
+                size="icon"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                onClick={handleSend}
+                disabled={isLoading || !input.trim()}
+                >
+                <Send className="h-4 w-4" />
+                </Button>
+            </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
