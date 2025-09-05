@@ -11,12 +11,16 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import {MessageData} from 'genkit/model';
+import {getDirections} from '../tools/routing';
+import {initialFacilities} from '@/lib/data';
 
 const ChatInputSchema = z.object({
-  history: z.array(z.object({
-    role: z.enum(['user', 'model']),
-    content: z.string(),
-  })),
+  history: z.array(
+    z.object({
+      role: z.enum(['user', 'model']),
+      content: z.string(),
+    })
+  ),
   message: z.string(),
 });
 export type ChatInput = z.infer<typeof ChatInputSchema>;
@@ -25,6 +29,9 @@ export type ChatOutput = AsyncGenerator<string>;
 
 export async function* chat(input: ChatInput): ChatOutput {
   const {history, message} = input;
+
+  const facilityList = initialFacilities.map(f => f.name).join(', ');
+
   const {stream} = ai.generateStream({
     history: history.map(
       h =>
@@ -34,6 +41,10 @@ export async function* chat(input: ChatInput): ChatOutput {
         } as MessageData)
     ),
     prompt: message,
+    tools: [getDirections],
+    system: `You are a helpful assistant for the Simhastha 2028 event in Ujjain.
+    The user may ask for directions. If so, use the getDirections tool.
+    Available facilities: ${facilityList}.`,
   });
 
   for await (const chunk of stream) {

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import dynamic from 'next/dynamic';
 import {
   SidebarProvider,
   Sidebar,
@@ -19,7 +20,6 @@ import {
   parkingFacilities as initialParking,
 } from "@/lib/data";
 import type { AnyFacility, Parking } from "@/types";
-import { MapView } from "@/components/map-view";
 import { Header } from "@/components/header";
 import { Logo } from "@/components/logo";
 import { FacilityCard } from "@/components/facility-card";
@@ -27,6 +27,12 @@ import { Button } from "./ui/button";
 import { Loader2, Navigation, ParkingCircle, Hotel, Siren } from "lucide-react";
 import { analyzeParkingCrowding } from "@/ai/flows/crowding-analysis-and-alert";
 import { useToast } from "@/hooks/use-toast";
+
+const MapView = dynamic(() => import('@/components/map-view').then(mod => mod.MapView), {
+  ssr: false,
+  loading: () => <div className="w-full h-full bg-muted flex items-center justify-center"><Loader2 className="h-10 w-10 animate-spin" /></div>
+});
+
 
 type FilterType = "all" | "parking" | "hotel" | "emergency";
 
