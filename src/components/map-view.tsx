@@ -80,15 +80,26 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
             show: false,
             addWaypoints: false,
             marker: (waypointIndex, waypoint, numberOfWaypoints) => {
+                const isStart = waypointIndex === 0;
+
+                // Start point
+                if (isStart) {
+                    const isUser = userPosition && waypoint.latLng.lat === userPosition.lat && waypoint.latLng.lng === userPosition.lng;
+                     if (isUser) {
+                        return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon({ type: 'user' }, false) });
+                    }
+                    const facility = facilities.find(f => f.position.lat === waypoint.latLng.lat && f.position.lng === waypoint.latLng.lng);
+                    if (facility) {
+                        return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon(facility, false) });
+                    }
+                }
+
+                // End point
                 const facility = facilities.find(f => f.position.lat === waypoint.latLng.lat && f.position.lng === waypoint.latLng.lng);
-                const isUser = userPosition && waypoint.latLng.lat === userPosition.lat && waypoint.latLng.lng === userPosition.lng;
-                
-                if (isUser) {
-                    return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon({ type: 'user' }, false) });
-                }
                 if (facility) {
-                    return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon(facility, false) });
+                    return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon(facility, true) });
                 }
+                
                 return false;
             }
         }).addTo(mapInstanceRef.current);
