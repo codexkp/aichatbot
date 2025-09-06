@@ -1,6 +1,6 @@
 "use client";
 
-import { ParkingCircle, Hotel, Hospital, Siren, Flame, User } from 'lucide-react';
+import { ParkingCircle, Hotel, Hospital, Siren, Flame, Navigation } from 'lucide-react';
 import type { AnyFacility, Parking } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -15,7 +15,7 @@ export const MapMarker = ({ facility, isSelected }: MapMarkerProps) => {
 
   const getIcon = () => {
     if (facility.type === 'user') {
-      return <User className="w-6 h-6" />;
+      return <Navigation className="w-6 h-6" />;
     }
     switch (facility.type) {
       case 'parking':
