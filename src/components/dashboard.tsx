@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -209,6 +210,8 @@ export function Dashboard() {
       </Sidebar>
       <SidebarInset>
         <Header>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-primary animate-pulse">Use chatbot to access the facilities</span>
             <ChatbotDialog 
                 open={isChatbotOpen} 
                 onOpenChange={setIsChatbotOpen} 
@@ -216,6 +219,7 @@ export function Dashboard() {
                 onLocateFacility={handleLocateFacility}
                 onShowDirections={handleShowDirections}
             />
+          </div>
         </Header>
         <div className="flex-1 relative">
           <div className={cn('w-full h-full', isChatbotOpen ? 'invisible' : 'visible')}>
