@@ -22,7 +22,7 @@ interface MapViewProps {
 const ujjainCenter: LatLngExpression = [23.1793, 75.7849];
 const defaultZoom = 13;
 
-const createCustomIcon = (facility: AnyFacility | { type: 'user' }, isSelected: boolean) => {
+const createCustomIcon = (facility: AnyFacility | { type: 'user' } | { type: 'destination' }, isSelected: boolean) => {
     const markerHtml = renderToStaticMarkup(
       <MapMarker facility={facility} isSelected={isSelected} />
     );
@@ -87,16 +87,12 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
                     if (isUserLocation) {
                         return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon({ type: 'user' }, true), draggable: false });
                     }
-                    // It's a facility
                     const startFacility = facilities.find(f => f.position.lat === waypoint.latLng.lat && f.position.lng === waypoint.latLng.lng);
                     if(startFacility){
                         return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon(startFacility, true), draggable: false });
                     }
                 } else { // It's the destination
-                    const endFacility = facilities.find(f => f.position.lat === waypoint.latLng.lat && f.position.lng === waypoint.latLng.lng);
-                    if (endFacility) {
-                        return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon(endFacility, true), draggable: false });
-                    }
+                    return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon({ type: 'destination' }, true), draggable: false });
                 }
                 
                 // Fallback to a standard marker if no facility matches, which should not happen in normal flow.
@@ -167,12 +163,16 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
             }
         });
 
-        mapInstanceRef.current.setView([selectedFacility.position.lat, selectedFacility.position.lng], mapInstanceRef.current.getZoom(), {
-            animate: true,
-            pan: {
-                duration: 0.5
+        mapInstanceRef.current.setView(
+            [selectedFacility.position.lat, selectedFacility.position.lng], 
+            mapInstanceRef.current.getZoom(),
+            {
+                animate: true,
+                pan: {
+                    duration: 0.5
+                }
             }
-        });
+        );
     }
   }, [selectedFacility, facilities, route]);
 

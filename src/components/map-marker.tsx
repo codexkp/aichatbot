@@ -1,11 +1,11 @@
 "use client";
 
-import { ParkingCircle, Hotel, Hospital, Siren, Flame, Navigation } from 'lucide-react';
+import { ParkingCircle, Hotel, Hospital, Siren, Flame, Navigation, MapPin } from 'lucide-react';
 import type { AnyFacility, Parking } from '@/types';
 import { cn } from '@/lib/utils';
 
 interface MapMarkerProps {
-  facility: AnyFacility | { type: 'user' };
+  facility: AnyFacility | { type: 'user' } | { type: 'destination' };
   isSelected: boolean;
 }
 
@@ -17,6 +17,9 @@ export const MapMarker = ({ facility, isSelected }: MapMarkerProps) => {
     const getIcon = () => {
         if (facility.type === 'user') {
             return <Navigation className="w-5 h-5" />;
+        }
+        if (facility.type === 'destination') {
+            return <MapPin className="w-5 h-5" />;
         }
         switch (facility.type) {
             case 'parking':
@@ -38,6 +41,9 @@ export const MapMarker = ({ facility, isSelected }: MapMarkerProps) => {
     const getColorClasses = () => {
         if (facility.type === 'user') {
             return 'bg-blue-500 after:border-t-blue-500';
+        }
+         if (facility.type === 'destination') {
+            return 'bg-primary after:border-t-primary';
         }
         if (facility.type === 'parking') {
             const parkingFacility = facility as Parking;
