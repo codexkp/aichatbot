@@ -13,7 +13,7 @@ import {
   DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Loader2, MessageCircle, Send } from "lucide-react";
+import { Loader2, MessageCircle, Send, Volume2 } from "lucide-react";
 import { chat } from "@/ai/flows/chatbot";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "./ui/avatar";
@@ -22,6 +22,8 @@ import type { Position, Route } from "@/types";
 interface Message {
   role: "user" | "model";
   content: string;
+  audio?: string;
+  id: string;
 }
 
 interface ChatbotDialogProps {
@@ -32,39 +34,14 @@ interface ChatbotDialogProps {
   onShowDirections: (route: Route) => void;
 }
 
-const renderMessageContent = (content: string) => {
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  const parts = content.split(urlRegex);
-
-  return (
-    <p className="text-sm whitespace-pre-wrap">
-      {parts.map((part, index) => {
-        if (part.match(urlRegex)) {
-          return (
-            <a
-              key={index}
-              href={part}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 underline hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-            >
-              Click here for directions
-            </a>
-          );
-        }
-        return part;
-      })}
-    </p>
-  );
-};
-
 export function ChatbotDialog({ open, onOpenChange, userPosition, onLocateFacility, onShowDirections }: ChatbotDialogProps) {
   const [messages, setMessages] = useState<Message[]>([
-    { role: "model", content: "Jai Shree Mahakal! How can I help you?" },
+    { role: "model", content: "Jai Shree Mahakal! How can I help you?", id: 'initial' },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -74,11 +51,21 @@ export function ChatbotDialog({ open, onOpenChange, userPosition, onLocateFacili
       });
     }
   }, [messages]);
+  
+  useEffect(() => {
+    const lastMessage = messages[messages.length -1];
+    if (lastMessage?.role === 'model' && lastMessage.audio) {
+        if(audioRef.current) {
+            audioRef.current.src = lastMessage.audio;
+            audioRef.current.play().catch(e => console.error("Audio playback failed", e));
+        }
+    }
+  }, [messages]);
 
   const handleSend = async () => {
     if (input.trim() === "") return;
 
-    const userMessage: Message = { role: "user", content: input };
+    const userMessage: Message = { role: "user", content: input, id: crypto.randomUUID() };
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
     setInput("");
@@ -95,22 +82,22 @@ export function ChatbotDialog({ open, onOpenChange, userPosition, onLocateFacili
         message: input,
         userPosition: userPosition || undefined,
       });
-
-      let modelMessage: Message = { role: "model", content: "" };
+      
+      const modelMessageId = crypto.randomUUID();
+      let modelMessage: Message = { role: "model", content: "", id: modelMessageId };
       setMessages(prev => [...prev, modelMessage]);
       
-      let content = '';
       for await (const chunk of stream) {
-        if (chunk.text) {
-            content += chunk.text;
-            setMessages(prev => {
-                const lastMsg = prev[prev.length - 1];
-                if (lastMsg.role === 'model') {
-                    return [...prev.slice(0, -1), { ...lastMsg, content }];
-                }
-                return prev;
-            });
-        }
+        setMessages(prev => {
+            const lastMsg = prev[prev.length - 1];
+            if (lastMsg.id === modelMessageId && lastMsg.role === 'model') {
+                const newContent = lastMsg.content + (chunk.text || '');
+                const newAudio = chunk.audio || lastMsg.audio;
+                return [...prev.slice(0, -1), { ...lastMsg, content: newContent, audio: newAudio }];
+            }
+            return prev;
+        });
+        
         if (chunk.facilityId) {
             onLocateFacility(chunk.facilityId);
         }
@@ -125,6 +112,7 @@ export function ChatbotDialog({ open, onOpenChange, userPosition, onLocateFacili
       const errorMessage: Message = {
         role: "model",
         content: "Sorry, I'm having trouble connecting. Please try again later.",
+        id: crypto.randomUUID(),
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
@@ -142,16 +130,16 @@ export function ChatbotDialog({ open, onOpenChange, userPosition, onLocateFacili
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] md:max-w-lg flex flex-col h-[70vh]">
         <DialogHeader>
-          <DialogTitle className="font-headline">Chatbot</DialogTitle>
+          <DialogTitle className="font-headline">Simhastha Seeker</DialogTitle>
           <DialogDescription>
-            Your guide to Simhastha 2028.
+            Your AI guide for Simhastha 2028. Ask me anything!
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
           <div className="space-y-4">
-            {messages.map((message, index) => (
+            {messages.map((message) => (
               <div
-                key={index}
+                key={message.id}
                 className={cn(
                   "flex items-start gap-3",
                   message.role === "user" ? "justify-end" : "justify-start"
@@ -170,7 +158,10 @@ export function ChatbotDialog({ open, onOpenChange, userPosition, onLocateFacili
                       : "bg-muted"
                   )}
                 >
-                  {renderMessageContent(message.content)}
+                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    {message.audio && (
+                        <Volume2 className="h-4 w-4 mt-2 text-muted-foreground" />
+                    )}
                 </div>
                 {message.role === "user" && (
                   <Avatar className="w-8 h-8">
@@ -212,6 +203,7 @@ export function ChatbotDialog({ open, onOpenChange, userPosition, onLocateFacili
                 </Button>
             </div>
         </div>
+        <audio ref={audioRef} className="hidden" />
       </DialogContent>
     </Dialog>
   );

@@ -14,6 +14,7 @@ import {MessageData} from 'genkit/model';
 import {getDirections} from '../tools/routing';
 import {initialFacilities} from '@/lib/data';
 import type { Position } from '@/types';
+import { textToSpeech } from './textToSpeech';
 
 const ChatInputSchema = z.object({
   history: z.array(
@@ -39,6 +40,7 @@ const ChatOutputSchema = z.object({
     text: z.string().describe("The textual response to the user's message."),
     facilityId: z.string().optional().describe("The ID of the facility to highlight on the map, if the user asked for a location."),
     route: RouteInfoSchema.optional().describe("The route to display on the map if the user asked for directions."),
+    audio: z.string().optional().describe("The audio response in base64 WAV format."),
 });
 
 export type ChatOutput = AsyncGenerator<z.infer<typeof ChatOutputSchema>>;
@@ -80,9 +82,22 @@ export async function* chat(input: ChatInput): ChatOutput {
     }
   });
 
+  let fullText = '';
   for await (const chunk of stream) {
+    if (chunk.output?.text) {
+        fullText += chunk.output.text;
+    }
     if (chunk.output) {
       yield chunk.output;
+    }
+  }
+
+  if (fullText) {
+    try {
+      const audio = await textToSpeech(fullText);
+      yield { text: '', audio };
+    } catch(e) {
+      console.error("Error generating audio", e);
     }
   }
 }
