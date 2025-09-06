@@ -85,10 +85,10 @@ export async function* chat(input: ChatInput): ChatOutput {
 
   let fullText = '';
   for await (const chunk of stream) {
-    if (chunk.output?.text) {
-        fullText += chunk.output.text;
-    }
     if (chunk.output) {
+      if (chunk.output.text) {
+        fullText += chunk.output.text;
+      }
       yield chunk.output;
     }
   }
