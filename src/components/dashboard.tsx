@@ -211,7 +211,7 @@ export function Dashboard() {
       <SidebarInset>
         <Header>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-primary animate-pulse">Use chatbot to access the facilities</span>
+            <span className="text-base font-semibold text-primary">Use chatbot to access the facilities</span>
             <ChatbotDialog 
                 open={isChatbotOpen} 
                 onOpenChange={setIsChatbotOpen} 
