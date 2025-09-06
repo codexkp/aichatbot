@@ -8,11 +8,10 @@ import { Logo } from "./logo";
 import * as React from "react";
 
 interface HeaderProps {
-  onChatbotOpenChange: (open: boolean) => void;
   children: React.ReactNode;
 }
 
-export function Header({ onChatbotOpenChange, children }: HeaderProps) {
+export function Header({ children }: HeaderProps) {
   const isMobile = useIsMobile();
 
   return (

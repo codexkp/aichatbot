@@ -27,6 +27,7 @@ import { Loader2, Navigation, ParkingCircle, Hotel, Siren, Crosshair } from "luc
 import { analyzeParkingCrowding } from "@/ai/flows/crowding-analysis-and-alert";
 import { useToast } from "@/hooks/use-toast";
 import { ChatbotDialog } from "@/components/smart-report-dialog";
+import { cn } from "@/lib/utils";
 
 const MapView = dynamic(() => import('@/components/map-view'), {
   ssr: false,
@@ -200,7 +201,7 @@ export function Dashboard() {
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
-        <Header onChatbotOpenChange={setIsChatbotOpen}>
+        <Header>
             <ChatbotDialog 
                 open={isChatbotOpen} 
                 onOpenChange={setIsChatbotOpen} 
@@ -209,7 +210,7 @@ export function Dashboard() {
             />
         </Header>
         <div className="flex-1 relative">
-          <div className={'block w-full h-full'}>
+          <div className={cn('w-full h-full', isChatbotOpen ? 'invisible' : 'visible')}>
             <MapView
                 facilities={filteredFacilities}
                 onSelectFacility={handleSelectFacility}
