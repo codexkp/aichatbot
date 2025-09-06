@@ -12,6 +12,7 @@ interface MapViewProps {
   onSelectFacility: (facility: AnyFacility) => void;
   selectedFacility: AnyFacility | null;
   userPosition: Position | null;
+  center: Position | null;
 }
 
 const ujjainCenter: LatLngExpression = [23.1793, 75.7849];
@@ -29,7 +30,7 @@ const createCustomIcon = (facility: AnyFacility | { type: 'user' }, isSelected: 
     });
 };
 
-export default function MapView({ facilities, onSelectFacility, selectedFacility, userPosition }: MapViewProps) {
+export default function MapView({ facilities, onSelectFacility, selectedFacility, userPosition, center }: MapViewProps) {
   const mapRef = React.useRef<HTMLDivElement>(null);
   const mapInstanceRef = React.useRef<L.Map | null>(null);
   const markerLayerRef = React.useRef<LayerGroup | null>(null);
@@ -86,12 +87,38 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
             userMarkerRef.current = marker;
         }
       }
-      mapInstanceRef.current.setView([userPosition.lat, userPosition.lng], 15);
     }
   }, [userPosition]);
   
   React.useEffect(() => {
+    if (mapInstanceRef.current && center) {
+        mapInstanceRef.current.setView([center.lat, center.lng], 15, {
+            animate: true,
+            pan: {
+                duration: 0.5
+            }
+        });
+    }
+  }, [center]);
+
+  React.useEffect(() => {
     if (mapInstanceRef.current && selectedFacility) {
+        // Find marker in layer and update its icon
+        const layer = markerLayerRef.current;
+        if (!layer) return;
+        layer.eachLayer(l => {
+            const marker = l as LeafletMarker;
+            // A bit of a hack to check if this is the facility marker
+            const facility = facilities.find(f => 
+                f.position.lat === marker.getLatLng().lat && 
+                f.position.lng === marker.getLatLng().lng
+            );
+            if (facility) {
+                const isSelected = selectedFacility?.id === facility.id;
+                marker.setIcon(createCustomIcon(facility, isSelected));
+            }
+        });
+
         mapInstanceRef.current.setView([selectedFacility.position.lat, selectedFacility.position.lng], mapInstanceRef.current.getZoom(), {
             animate: true,
             pan: {
@@ -99,7 +126,8 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
             }
         });
     }
-  }, [selectedFacility]);
+  }, [selectedFacility, facilities]);
+
 
   return <div ref={mapRef} className='w-full h-full' />;
 }

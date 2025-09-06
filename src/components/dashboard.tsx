@@ -23,7 +23,7 @@ import { Header } from "@/components/header";
 import { Logo } from "@/components/logo";
 import { FacilityCard } from "@/components/facility-card";
 import { Button } from "./ui/button";
-import { Loader2, Navigation, ParkingCircle, Hotel, Siren } from "lucide-react";
+import { Loader2, Navigation, ParkingCircle, Hotel, Siren, Crosshair } from "lucide-react";
 import { analyzeParkingCrowding } from "@/ai/flows/crowding-analysis-and-alert";
 import { useToast } from "@/hooks/use-toast";
 import { ChatbotDialog } from "@/components/smart-report-dialog";
@@ -42,6 +42,7 @@ export function Dashboard() {
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
   const [isChatbotOpen, setIsChatbotOpen] = React.useState(false);
   const [userPosition, setUserPosition] = React.useState<Position | null>(null);
+  const [mapCenter, setMapCenter] = React.useState<Position | null>(null);
   const { toast } = useToast();
 
   const handleSelectFacility = React.useCallback((facility: AnyFacility) => {
@@ -52,6 +53,7 @@ export function Dashboard() {
     const facility = initialFacilities.find(f => f.id === facilityId);
     if (facility) {
       setSelectedFacility(facility);
+      setMapCenter(facility.position);
       setIsChatbotOpen(false);
     }
   }, []);
@@ -63,6 +65,13 @@ export function Dashboard() {
     }
     return facilities.filter((f) => f.type === activeFilter);
   }, [activeFilter, facilities]);
+  
+  const handleLocateMe = React.useCallback(() => {
+    if (userPosition) {
+      setMapCenter(userPosition);
+    }
+  }, [userPosition]);
+
 
   React.useEffect(() => {
     setSelectedFacility(null);
@@ -71,10 +80,12 @@ export function Dashboard() {
   React.useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setUserPosition({
+        const pos = {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
-        });
+        };
+        setUserPosition(pos);
+        setMapCenter(pos);
       },
       () => {
         toast({
@@ -198,13 +209,20 @@ export function Dashboard() {
             />
         </Header>
         <div className="flex-1 relative">
-          <div className={isChatbotOpen ? 'hidden' : 'block w-full h-full'}>
+          <div className={'block w-full h-full'}>
             <MapView
                 facilities={filteredFacilities}
                 onSelectFacility={handleSelectFacility}
                 selectedFacility={selectedFacility}
                 userPosition={userPosition}
+                center={mapCenter}
             />
+             <div className="absolute bottom-4 right-4 z-[500]">
+                <Button size="icon" onClick={handleLocateMe} disabled={!userPosition} className="rounded-full shadow-lg">
+                    <Crosshair className="h-5 w-5" />
+                    <span className="sr-only">Locate Me</span>
+                </Button>
+            </div>
           </div>
         </div>
       </SidebarInset>
