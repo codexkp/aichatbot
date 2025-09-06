@@ -60,13 +60,28 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
         }
     };
   }, []);
-
+  
+  // Effect to draw facility markers
   React.useEffect(() => {
-    const layer = markerLayerRef.current;
-    if (!layer || !mapInstanceRef.current) return;
+      const layer = markerLayerRef.current;
+      if (!layer) return;
+
+      layer.clearLayers();
+      facilities.forEach(facility => {
+          const isSelected = selectedFacility?.id === facility.id;
+          const newMarker = new LeafletMarker([facility.position.lat, facility.position.lng], {
+              icon: createCustomIcon(facility, isSelected)
+          });
+          newMarker.on('click', () => onSelectFacility(facility));
+          layer.addLayer(newMarker);
+      });
+  }, [facilities, selectedFacility, onSelectFacility]);
+
+  // Effect to draw or clear the route
+  React.useEffect(() => {
+    if (!mapInstanceRef.current) return;
 
     if (route) {
-        layer.clearLayers();
         if (routeControlRef.current) {
             mapInstanceRef.current.removeControl(routeControlRef.current);
         }
@@ -85,14 +100,14 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
                 if (isStart) {
                     const isUserLocation = userPosition && waypoint.latLng.lat === userPosition.lat && waypoint.latLng.lng === userPosition.lng;
                     if (isUserLocation) {
-                        return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon({ type: 'user' }, true), draggable: false });
+                        return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon({ type: 'user' }, true), draggable: false, zIndexOffset: 1000 });
                     }
                     const startFacility = facilities.find(f => f.position.lat === waypoint.latLng.lat && f.position.lng === waypoint.latLng.lng);
                     if(startFacility){
-                        return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon(startFacility, true), draggable: false });
+                        return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon(startFacility, true), draggable: false, zIndexOffset: 1000 });
                     }
                 } else { // It's the destination
-                    return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon({ type: 'destination' }, true), draggable: false });
+                    return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon({ type: 'destination' }, true), draggable: false, zIndexOffset: 1000 });
                 }
                 
                 // Fallback to a standard marker if no facility matches, which should not happen in normal flow.
@@ -105,18 +120,10 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
             mapInstanceRef.current.removeControl(routeControlRef.current);
             routeControlRef.current = null;
         }
-        layer.clearLayers();
-        facilities.forEach(facility => {
-            const isSelected = selectedFacility?.id === facility.id;
-            const newMarker = new LeafletMarker([facility.position.lat, facility.position.lng], {
-                icon: createCustomIcon(facility, isSelected)
-            });
-            newMarker.on('click', () => onSelectFacility(facility));
-            layer.addLayer(newMarker);
-        });
     }
-  }, [facilities, selectedFacility, onSelectFacility, route, userPosition]);
+  }, [route, userPosition, facilities]);
   
+  // Effect for user position marker
   React.useEffect(() => {
     if (mapInstanceRef.current && userPosition) {
       const userIcon = createCustomIcon({ type: 'user' }, false);
@@ -136,6 +143,7 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
     }
   }, [userPosition]);
   
+  // Effect for centering the map
   React.useEffect(() => {
     if (mapInstanceRef.current && center) {
         mapInstanceRef.current.setView([center.lat, center.lng], 15, {
@@ -147,11 +155,10 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
     }
   }, [center]);
 
+  // Effect to update selected marker styling (e.g., when route is cleared)
   React.useEffect(() => {
-    if (mapInstanceRef.current && selectedFacility && !route) {
-        const layer = markerLayerRef.current;
-        if (!layer) return;
-        layer.eachLayer(l => {
+    if (mapInstanceRef.current && markerLayerRef.current) {
+        markerLayerRef.current.eachLayer(l => {
             const marker = l as LeafletMarker;
             const facility = facilities.find(f => 
                 f.position.lat === marker.getLatLng().lat && 
@@ -162,19 +169,21 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
                 marker.setIcon(createCustomIcon(facility, isSelected));
             }
         });
-
-        mapInstanceRef.current.setView(
-            [selectedFacility.position.lat, selectedFacility.position.lng], 
-            mapInstanceRef.current.getZoom(),
-            {
-                animate: true,
-                pan: {
-                    duration: 0.5
+        
+        if (selectedFacility) {
+            mapInstanceRef.current.setView(
+                [selectedFacility.position.lat, selectedFacility.position.lng], 
+                mapInstanceRef.current.getZoom(),
+                {
+                    animate: true,
+                    pan: {
+                        duration: 0.5
+                    }
                 }
-            }
-        );
+            );
+        }
     }
-  }, [selectedFacility, facilities, route]);
+  }, [selectedFacility, facilities]);
 
 
   return <div ref={mapRef} className='w-full h-full' />;
