@@ -76,31 +76,31 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
 
         routeControlRef.current = L.Routing.control({
             waypoints: [start, destination],
-            routeWhileDragging: true,
+            routeWhileDragging: false,
             show: false,
             addWaypoints: false,
-            marker: (waypointIndex, waypoint, numberOfWaypoints) => {
+            createMarker: (waypointIndex, waypoint, numberOfWaypoints) => {
                 const isStart = waypointIndex === 0;
 
-                // Start point
                 if (isStart) {
                     const isUser = userPosition && waypoint.latLng.lat === userPosition.lat && waypoint.latLng.lng === userPosition.lng;
                      if (isUser) {
-                        return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon({ type: 'user' }, false) });
+                        return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon({ type: 'user' }, true), draggable: false });
                     }
                     const facility = facilities.find(f => f.position.lat === waypoint.latLng.lat && f.position.lng === waypoint.latLng.lng);
                     if (facility) {
-                        return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon(facility, false) });
+                        return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon(facility, true), draggable: false });
                     }
                 }
 
                 // End point
                 const facility = facilities.find(f => f.position.lat === waypoint.latLng.lat && f.position.lng === waypoint.latLng.lng);
                 if (facility) {
-                    return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon(facility, true) });
+                    return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon(facility, true), draggable: false });
                 }
                 
-                return false;
+                // Fallback to a standard marker if no facility matches, which should not happen in normal flow.
+                return new LeafletMarker(waypoint.latLng, {draggable: false});
             }
         }).addTo(mapInstanceRef.current);
 
