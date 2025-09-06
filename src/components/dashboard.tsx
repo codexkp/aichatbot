@@ -242,12 +242,15 @@ export function Dashboard() {
 
 function FilterButton({ filter, activeFilter, setFilter, icon: Icon, children }: { filter: FilterType, activeFilter: FilterType, setFilter: (f: FilterType) => void, icon: React.ElementType, children: React.ReactNode}) {
     const { state } = useSidebar();
+    const isActive = activeFilter === filter;
+
     return (
         <SidebarMenuItem>
             <SidebarMenuButton
-              isActive={activeFilter === filter}
+              isActive={isActive}
               onClick={() => setFilter(filter)}
               tooltip={state === 'collapsed' ? String(children) : undefined}
+              className={cn(isActive && "bg-primary/10 text-primary font-semibold")}
             >
               <Icon/>
               <span>{children}</span>
