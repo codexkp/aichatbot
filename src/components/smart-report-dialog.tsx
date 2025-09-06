@@ -17,7 +17,7 @@ import { Loader2, MessageCircle, Send } from "lucide-react";
 import { chat } from "@/ai/flows/chatbot";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "./ui/avatar";
-import type { Position } from "@/types";
+import type { Position, Route } from "@/types";
 
 interface Message {
   role: "user" | "model";
@@ -29,6 +29,7 @@ interface ChatbotDialogProps {
   onOpenChange: (open: boolean) => void;
   userPosition: Position | null;
   onLocateFacility: (facilityId: string) => void;
+  onShowDirections: (route: Route) => void;
 }
 
 const renderMessageContent = (content: string) => {
@@ -57,7 +58,7 @@ const renderMessageContent = (content: string) => {
   );
 };
 
-export function ChatbotDialog({ open, onOpenChange, userPosition, onLocateFacility }: ChatbotDialogProps) {
+export function ChatbotDialog({ open, onOpenChange, userPosition, onLocateFacility, onShowDirections }: ChatbotDialogProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -110,6 +111,10 @@ export function ChatbotDialog({ open, onOpenChange, userPosition, onLocateFacili
         }
         if (chunk.facilityId) {
             onLocateFacility(chunk.facilityId);
+        }
+        if (chunk.route) {
+            onShowDirections(chunk.route);
+            onOpenChange(false);
         }
       }
 

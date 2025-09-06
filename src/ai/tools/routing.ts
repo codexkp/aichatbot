@@ -19,21 +19,35 @@ const GetDirectionsInputSchema = z.object({
     .describe('The name of the destination facility. Must be one of the available facilities.'),
 });
 
+const GetDirectionsOutputSchema = z.object({
+    start: z.object({
+        lat: z.number(),
+        lng: z.number(),
+    }),
+    destination: z.object({
+        lat: z.number(),
+        lng: z.number(),
+    }),
+    message: z.string().describe("A confirmation message to the user that the route is being displayed on the map.")
+});
+
+
 export const getDirections = ai.defineTool(
   {
     name: 'getDirections',
     description:
-      'Get directions between two locations in Ujjain for Simhastha 2028. The start location can be a facility name or a latitude,longitude string.',
+      'Get directions between two locations in Ujjain for Simhastha 2028. The start location can be a facility name or a latitude,longitude string. This tool returns coordinates to be displayed on the map.',
     inputSchema: GetDirectionsInputSchema,
-    outputSchema: z.string().describe('A URL with the directions.'),
+    outputSchema: GetDirectionsOutputSchema,
   },
   async ({start, destination}) => {
     let fromLat: number, fromLng: number;
+    let fromName: string;
 
-    // Check if start is coordinates
     const coords = start.split(',').map(Number);
     if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
         [fromLat, fromLng] = coords;
+        fromName = "your current location";
     } else {
         const startFacility = initialFacilities.find(
           f => f.name.toLowerCase() === start.toLowerCase()
@@ -42,10 +56,11 @@ export const getDirections = ai.defineTool(
             let message = `Could not find starting location: ${start}. `;
             const availableFacilities = initialFacilities.map(f => f.name).join(', ');
             message += `Available locations are: ${availableFacilities}`;
-            return message;
+            throw new Error(message);
         }
         fromLat = startFacility.position.lat;
         fromLng = startFacility.position.lng;
+        fromName = startFacility.name;
     }
 
     const destFacility = initialFacilities.find(
@@ -56,13 +71,18 @@ export const getDirections = ai.defineTool(
       let message = `Could not find destination location: ${destination}.`;
       const availableFacilities = initialFacilities.map(f => f.name).join(', ');
       message += `Available locations are: ${availableFacilities}`;
-      return message;
+      throw new Error(message);
     }
 
     const {
       position: {lat: toLat, lng: toLng},
+      name: destName,
     } = destFacility;
 
-    return `https://www.openstreetmap.org/directions?route=${fromLat},${fromLng}%3B${toLat},${toLng}`;
+    return {
+        start: { lat: fromLat, lng: fromLng },
+        destination: { lat: toLat, lng: toLng },
+        message: `Showing directions from ${fromName} to ${destName} on the map.`
+    };
   }
 );

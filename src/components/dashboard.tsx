@@ -18,7 +18,7 @@ import {
 import {
   initialFacilities,
 } from "@/lib/data";
-import type { AnyFacility, Parking, Position } from "@/types";
+import type { AnyFacility, Parking, Position, Route } from "@/types";
 import { Header } from "@/components/header";
 import { Logo } from "@/components/logo";
 import { FacilityCard } from "@/components/facility-card";
@@ -44,10 +44,12 @@ export function Dashboard() {
   const [isChatbotOpen, setIsChatbotOpen] = React.useState(false);
   const [userPosition, setUserPosition] = React.useState<Position | null>(null);
   const [mapCenter, setMapCenter] = React.useState<Position | null>(null);
+  const [route, setRoute] = React.useState<Route | null>(null);
   const { toast } = useToast();
 
   const handleSelectFacility = React.useCallback((facility: AnyFacility) => {
     setSelectedFacility(facility);
+    setRoute(null);
   }, []);
 
   const handleLocateFacility = React.useCallback((facilityId: string) => {
@@ -57,6 +59,11 @@ export function Dashboard() {
       setMapCenter(facility.position);
       setIsChatbotOpen(false);
     }
+  }, []);
+  
+  const handleShowDirections = React.useCallback((route: Route) => {
+    setRoute(route);
+    setSelectedFacility(null);
   }, []);
 
 
@@ -207,6 +214,7 @@ export function Dashboard() {
                 onOpenChange={setIsChatbotOpen} 
                 userPosition={userPosition}
                 onLocateFacility={handleLocateFacility}
+                onShowDirections={handleShowDirections}
             />
         </Header>
         <div className="flex-1 relative">
@@ -217,6 +225,7 @@ export function Dashboard() {
                 selectedFacility={selectedFacility}
                 userPosition={userPosition}
                 center={mapCenter}
+                route={route}
             />
              <div className="absolute bottom-4 right-4 z-[500]">
                 <Button size="icon" onClick={handleLocateMe} disabled={!userPosition} className="rounded-full shadow-lg">

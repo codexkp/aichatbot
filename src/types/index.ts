@@ -31,3 +31,8 @@ export type EmergencyService = Facility & {
 };
 
 export type AnyFacility = Parking | Hotel | EmergencyService;
+
+export type Route = {
+    start: Position;
+    destination: Position;
+};

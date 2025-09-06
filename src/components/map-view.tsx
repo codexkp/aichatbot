@@ -1,11 +1,14 @@
 "use client";
 
 import * as React from 'react';
-import type { AnyFacility, Position } from '@/types';
+import type { AnyFacility, Position, Route } from '@/types';
 import { MapMarker } from './map-marker';
 import { renderToStaticMarkup } from 'react-dom/server';
-import L, { divIcon, layerGroup, LayerGroup, Marker as LeafletMarker, LatLngExpression } from 'leaflet';
+import L, { divIcon, layerGroup, LayerGroup, Marker as LeafletMarker, LatLngExpression, LatLng } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
+import 'leaflet-routing-machine';
+
 
 interface MapViewProps {
   facilities: AnyFacility[];
@@ -13,6 +16,7 @@ interface MapViewProps {
   selectedFacility: AnyFacility | null;
   userPosition: Position | null;
   center: Position | null;
+  route: Route | null;
 }
 
 const ujjainCenter: LatLngExpression = [23.1793, 75.7849];
@@ -30,11 +34,12 @@ const createCustomIcon = (facility: AnyFacility | { type: 'user' }, isSelected: 
     });
 };
 
-export default function MapView({ facilities, onSelectFacility, selectedFacility, userPosition, center }: MapViewProps) {
+export default function MapView({ facilities, onSelectFacility, selectedFacility, userPosition, center, route }: MapViewProps) {
   const mapRef = React.useRef<HTMLDivElement>(null);
   const mapInstanceRef = React.useRef<L.Map | null>(null);
   const markerLayerRef = React.useRef<LayerGroup | null>(null);
   const userMarkerRef = React.useRef<LeafletMarker | null>(null);
+  const routeControlRef = React.useRef<L.Routing.Control | null>(null);
 
   React.useEffect(() => {
     if (mapRef.current && !mapInstanceRef.current) {
@@ -48,38 +53,72 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
       markerLayerRef.current = layerGroup().addTo(map);
     }
     
-    // Cleanup function to destroy the map instance
     return () => {
         if (mapInstanceRef.current) {
             mapInstanceRef.current.remove();
             mapInstanceRef.current = null;
         }
     };
-  }, []); // Empty dependency array ensures this runs only once on mount and unmount
+  }, []);
 
   React.useEffect(() => {
     const layer = markerLayerRef.current;
-    if (!layer) return;
+    if (!layer || !mapInstanceRef.current) return;
 
-    layer.clearLayers();
-    
-    facilities.forEach(facility => {
-        const isSelected = selectedFacility?.id === facility.id;
-        const newMarker = new LeafletMarker([facility.position.lat, facility.position.lng], {
-            icon: createCustomIcon(facility, isSelected)
+    if (route) {
+        layer.clearLayers();
+        if (routeControlRef.current) {
+            mapInstanceRef.current.removeControl(routeControlRef.current);
+        }
+
+        const start = new LatLng(route.start.lat, route.start.lng);
+        const destination = new LatLng(route.destination.lat, route.destination.lng);
+
+        routeControlRef.current = L.Routing.control({
+            waypoints: [start, destination],
+            routeWhileDragging: true,
+            show: false,
+            addWaypoints: false,
+            marker: (waypointIndex, waypoint, numberOfWaypoints) => {
+                const facility = facilities.find(f => f.position.lat === waypoint.latLng.lat && f.position.lng === waypoint.latLng.lng);
+                const isUser = userPosition && waypoint.latLng.lat === userPosition.lat && waypoint.latLng.lng === userPosition.lng;
+                
+                if (isUser) {
+                    return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon({ type: 'user' }, false) });
+                }
+                if (facility) {
+                    return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon(facility, false) });
+                }
+                return false;
+            }
+        }).addTo(mapInstanceRef.current);
+
+    } else {
+        if (routeControlRef.current) {
+            mapInstanceRef.current.removeControl(routeControlRef.current);
+            routeControlRef.current = null;
+        }
+        layer.clearLayers();
+        facilities.forEach(facility => {
+            const isSelected = selectedFacility?.id === facility.id;
+            const newMarker = new LeafletMarker([facility.position.lat, facility.position.lng], {
+                icon: createCustomIcon(facility, isSelected)
+            });
+            newMarker.on('click', () => onSelectFacility(facility));
+            layer.addLayer(newMarker);
         });
-        newMarker.on('click', () => onSelectFacility(facility));
-        layer.addLayer(newMarker);
-    });
-  }, [facilities, selectedFacility, onSelectFacility]);
+    }
+  }, [facilities, selectedFacility, onSelectFacility, route, userPosition]);
   
   React.useEffect(() => {
     if (mapInstanceRef.current && userPosition) {
+      const userIcon = createCustomIcon({ type: 'user' }, false);
       if (userMarkerRef.current) {
         userMarkerRef.current.setLatLng([userPosition.lat, userPosition.lng]);
+        userMarkerRef.current.setIcon(userIcon);
       } else {
         const marker = new LeafletMarker([userPosition.lat, userPosition.lng], {
-          icon: createCustomIcon({ type: 'user' }, false),
+          icon: userIcon,
           zIndexOffset: 1000
         });
         if(mapInstanceRef.current) {
@@ -102,13 +141,11 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
   }, [center]);
 
   React.useEffect(() => {
-    if (mapInstanceRef.current && selectedFacility) {
-        // Find marker in layer and update its icon
+    if (mapInstanceRef.current && selectedFacility && !route) {
         const layer = markerLayerRef.current;
         if (!layer) return;
         layer.eachLayer(l => {
             const marker = l as LeafletMarker;
-            // A bit of a hack to check if this is the facility marker
             const facility = facilities.find(f => 
                 f.position.lat === marker.getLatLng().lat && 
                 f.position.lng === marker.getLatLng().lng
@@ -126,7 +163,7 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
             }
         });
     }
-  }, [selectedFacility, facilities]);
+  }, [selectedFacility, facilities, route]);
 
 
   return <div ref={mapRef} className='w-full h-full' />;
