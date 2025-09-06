@@ -11,7 +11,7 @@ interface MapMarkerProps {
 
 export const MapMarker = ({ facility, isSelected }: MapMarkerProps) => {
   const baseClasses = "flex items-center justify-center w-10 h-10 rounded-full text-white shadow-lg transform transition-all duration-300";
-  const selectedClasses = "scale-125 ring-4 ring-offset-2 ring-offset-background";
+  const selectedClasses = "scale-125 ring-4 ring-offset-2 ring-offset-background ring-primary";
 
   const getIcon = () => {
     if (facility.type === 'user') {
@@ -58,7 +58,7 @@ export const MapMarker = ({ facility, isSelected }: MapMarkerProps) => {
   };
 
   return (
-    <div className={cn(baseClasses, getBackgroundColor(), isSelected && cn(selectedClasses, 'ring-primary'))}>
+    <div className={cn(baseClasses, getBackgroundColor(), isSelected && selectedClasses)}>
       {getIcon()}
     </div>
   );
