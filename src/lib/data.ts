@@ -1,4 +1,5 @@
-import type { Parking, Hotel, EmergencyService, AnyFacility } from "@/types";
+
+import type { Parking, Hotel, EmergencyService, AnyFacility, Temple, LostAndFound, Ghat, Akhada } from "@/types";
 
 export const parkingFacilities: Parking[] = [
   {
@@ -102,10 +103,97 @@ export const emergencyFacilities: EmergencyService[] = [
     position: { lat: 23.201, lng: 75.795 },
     contact: "+91-734-4015000",
   },
+  {
+    id: "emer_5",
+    name: "Mahakal Police Station",
+    type: "emergency",
+    serviceType: "police_station",
+    position: { lat: 23.1825, lng: 75.7675 },
+    contact: "100"
+  },
+];
+
+export const templeFacilities: Temple[] = [
+    {
+        id: "temple_1",
+        name: "Mahakaleshwar Temple",
+        type: "temple",
+        position: { lat: 23.1828, lng: 75.7687 },
+        deity: "Lord Shiva"
+    },
+    {
+        id: "temple_2",
+        name: "Harsiddhi Temple",
+        type: "temple",
+        position: { lat: 23.1830, lng: 75.7648 },
+        deity: "Goddess Harsiddhi"
+    },
+    {
+        id: "temple_3",
+        name: "Kal Bhairav Temple",
+        type: "temple",
+        position: { lat: 23.1950, lng: 75.7533 },
+        deity: "Lord Kal Bhairav"
+    }
+];
+
+export const lostAndFoundFacilities: LostAndFound[] = [
+    {
+        id: "lost_1",
+        name: "Lost & Found Center - Ramghat",
+        type: "lost_and_found",
+        position: { lat: 23.1840, lng: 75.7670 },
+        contact: "100"
+    },
+    {
+        id: "lost_2",
+        name: "Lost & Found Center - Mahakal Temple",
+        type: "lost_and_found",
+        position: { lat: 23.1818, lng: 75.7685 },
+        contact: "100"
+    }
+];
+
+export const ghatFacilities: Ghat[] = [
+    {
+        id: "ghat_1",
+        name: "Ram Ghat",
+        type: "ghat",
+        position: { lat: 23.1855, lng: 75.7659 },
+        river: "Shipra"
+    },
+    {
+        id: "ghat_2",
+        name: "Datta Akhara Ghat",
+        type: "ghat",
+        position: { lat: 23.1865, lng: 75.7645 },
+        river: "Shipra"
+    }
+];
+
+export const akhadaFacilities: Akhada[] = [
+    {
+        id: "akhada_1",
+        name: "Juna Akhada",
+        type: "akhada",
+        position: { lat: 23.1870, lng: 75.7630 },
+        sect: "Shaiva"
+    },
+    {
+        id: "akhada_2",
+        name: "Niranjani Akhada",
+        type: "akhada",
+        position: { lat: 23.1880, lng: 75.7620 },
+        sect: "Shaiva"
+    }
 ];
 
 export const initialFacilities: AnyFacility[] = [
     ...parkingFacilities,
     ...hotelFacilities,
-    ...emergencyFacilities
+    ...emergencyFacilities,
+    ...templeFacilities,
+    ...lostAndFoundFacilities,
+    ...ghatFacilities,
+    ...akhadaFacilities,
 ];

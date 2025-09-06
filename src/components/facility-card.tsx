@@ -1,6 +1,7 @@
+
 "use client";
 
-import type { AnyFacility, Hotel, Parking, EmergencyService } from "@/types";
+import type { AnyFacility, Hotel, Parking, EmergencyService, Temple, LostAndFound, Ghat, Akhada } from "@/types";
 import {
   Card,
   CardContent,
@@ -18,6 +19,12 @@ import {
   Flame,
   Phone,
   MapPin,
+  Landmark,
+  Search,
+  Waves,
+  Swords,
+  Building2,
+  Shield,
 } from "lucide-react";
 
 export function FacilityCard({ facility }: { facility: AnyFacility }) {
@@ -28,13 +35,20 @@ export function FacilityCard({ facility }: { facility: AnyFacility }) {
       case "hotel":
         return <HotelIcon className="h-5 w-5 text-muted-foreground" />;
       case "emergency":
-        return facility.serviceType === "hospital" ? (
-          <Hospital className="h-5 w-5 text-muted-foreground" />
-        ) : facility.serviceType === "police" ? (
-          <Siren className="h-5 w-5 text-muted-foreground" />
-        ) : (
-          <Flame className="h-5 w-5 text-muted-foreground" />
-        );
+        switch (facility.serviceType) {
+          case "hospital": return <Hospital className="h-5 w-5 text-muted-foreground" />;
+          case "police": return <Siren className="h-5 w-5 text-muted-foreground" />;
+          case "fire": return <Flame className="h-5 w-5 text-muted-foreground" />;
+          case "police_station": return <Shield className="h-5 w-5 text-muted-foreground" />;
+        }
+      case "temple":
+        return <Landmark className="h-5 w-5 text-muted-foreground" />;
+      case "lost_and_found":
+        return <Search className="h-5 w-5 text-muted-foreground" />;
+      case "ghat":
+        return <Waves className="h-5 w-5 text-muted-foreground" />;
+      case "akhada":
+        return <Swords className="h-5 w-5 text-muted-foreground" />;
       default:
         return null;
     }
@@ -47,7 +61,7 @@ export function FacilityCard({ facility }: { facility: AnyFacility }) {
           <div className="flex-shrink-0">{renderIcon()}</div>
           <div className="flex-grow">
             <CardTitle className="font-headline text-lg">{facility.name}</CardTitle>
-            <CardDescription className="capitalize">{facility.type}</CardDescription>
+            <CardDescription className="capitalize">{facility.type.replace(/_/g, " ")}</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -56,6 +70,10 @@ export function FacilityCard({ facility }: { facility: AnyFacility }) {
         {facility.type === "parking" && <ParkingDetails facility={facility} />}
         {facility.type === "hotel" && <HotelDetails facility={facility} />}
         {facility.type === "emergency" && <EmergencyDetails facility={facility} />}
+        {facility.type === "temple" && <TempleDetails facility={facility} />}
+        {facility.type === "lost_and_found" && <LostAndFoundDetails facility={facility} />}
+        {facility.type === "ghat" && <GhatDetails facility={facility} />}
+        {facility.type === "akhada" && <AkhadaDetails facility={facility} />}
       </CardContent>
     </Card>
   );
@@ -113,7 +131,7 @@ function EmergencyDetails({ facility }: { facility: EmergencyService }) {
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <Badge variant="outline" className="capitalize border-accent">
-          {facility.serviceType}
+          {facility.serviceType.replace(/_/g, " ")}
         </Badge>
       </div>
       <div className="flex items-center gap-2">
@@ -124,4 +142,52 @@ function EmergencyDetails({ facility }: { facility: EmergencyService }) {
       </div>
     </div>
   );
+}
+
+function TempleDetails({ facility }: { facility: Temple }) {
+    return (
+        <div className="space-y-2">
+            <div className="flex items-center gap-2">
+                <span className="font-medium">Main Deity:</span>
+                <span>{facility.deity}</span>
+            </div>
+        </div>
+    );
+}
+
+function LostAndFoundDetails({ facility }: { facility: LostAndFound }) {
+    return (
+        <div className="space-y-2">
+            <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <span className="font-medium">Contact:</span>
+                <a href={`tel:${facility.contact}`} className="hover:underline">
+                    {facility.contact}
+                </a>
+            </div>
+        </div>
+    );
+}
+
+function GhatDetails({ facility }: { facility: Ghat }) {
+    return (
+        <div className="space-y-2">
+            <div className="flex items-center gap-2">
+                <Waves className="h-4 w-4 text-muted-foreground" />
+                <span className="font-medium">River:</span>
+                <span>{facility.river}</span>
+            </div>
+        </div>
+    );
+}
+
+function AkhadaDetails({ facility }: { facility: Akhada }) {
+    return (
+        <div className="space-y-2">
+            <div className="flex items-center gap-2">
+                <span className="font-medium">Sect:</span>
+                <span>{facility.sect}</span>
+            </div>
+        </div>
+    );
 }

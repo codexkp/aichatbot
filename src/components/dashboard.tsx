@@ -24,7 +24,7 @@ import { Header } from "@/components/header";
 import { Logo } from "@/components/logo";
 import { FacilityCard } from "@/components/facility-card";
 import { Button } from "./ui/button";
-import { Loader2, Navigation, ParkingCircle, Hotel, Siren, Crosshair } from "lucide-react";
+import { Loader2, Navigation, ParkingCircle, Hotel, Siren, Crosshair, Search, Waves, Swords, Building2, Landmark } from "lucide-react";
 import { analyzeParkingCrowding } from "@/ai/flows/crowding-analysis-and-alert";
 import { useToast } from "@/hooks/use-toast";
 import { ChatbotDialog } from "@/components/smart-report-dialog";
@@ -35,7 +35,7 @@ const MapView = dynamic(() => import('@/components/map-view'), {
   loading: () => <div className="w-full h-full bg-muted flex items-center justify-center"><Loader2 className="h-10 w-10 animate-spin" /></div>
 });
 
-type FilterType = "all" | "parking" | "hotel" | "emergency";
+type FilterType = "all" | "parking" | "hotel" | "emergency" | "temple" | "lost_and_found" | "ghat" | "akhada" | "police_station";
 
 export function Dashboard() {
   const [facilities, setFacilities] = React.useState<AnyFacility[]>(initialFacilities);
@@ -59,6 +59,13 @@ export function Dashboard() {
       setSelectedFacility(facility);
       setMapCenter(facility.position);
       setIsChatbotOpen(false);
+      
+      // Update filter to show the located facility's type
+      if (facility.type === 'emergency' && facility.serviceType === 'police_station') {
+        setActiveFilter('police_station');
+      } else {
+        setActiveFilter(facility.type);
+      }
     }
   }, []);
   
@@ -72,6 +79,9 @@ export function Dashboard() {
     if (activeFilter === "all") {
       return facilities;
     }
+     if (activeFilter === "police_station") {
+      return facilities.filter((f) => f.type === 'emergency' && f.serviceType === 'police_station');
+    }
     return facilities.filter((f) => f.type === activeFilter);
   }, [activeFilter, facilities]);
   
@@ -84,6 +94,7 @@ export function Dashboard() {
 
   React.useEffect(() => {
     setSelectedFacility(null);
+    setRoute(null);
   }, [activeFilter]);
   
   React.useEffect(() => {
@@ -178,6 +189,21 @@ export function Dashboard() {
               </FilterButton>
               <FilterButton filter="emergency" activeFilter={activeFilter} setFilter={setActiveFilter} icon={Siren}>
                 Emergency
+              </FilterButton>
+               <FilterButton filter="police_station" activeFilter={activeFilter} setFilter={setActiveFilter} icon={Building2}>
+                Police Stations
+              </FilterButton>
+              <FilterButton filter="temple" activeFilter={activeFilter} setFilter={setActiveFilter} icon={Landmark}>
+                Temples
+              </FilterButton>
+              <FilterButton filter="lost_and_found" activeFilter={activeFilter} setFilter={setActiveFilter} icon={Search}>
+                Lost & Found
+              </FilterButton>
+              <FilterButton filter="ghat" activeFilter={activeFilter} setFilter={setActiveFilter} icon={Waves}>
+                Ghats
+              </FilterButton>
+              <FilterButton filter="akhada" activeFilter={activeFilter} setFilter={setActiveFilter} icon={Swords}>
+                Akhadas
               </FilterButton>
             </SidebarMenu>
           </SidebarGroup>

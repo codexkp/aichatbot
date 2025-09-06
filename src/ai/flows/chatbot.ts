@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -52,11 +53,11 @@ export async function* chat(input: ChatInput): ChatOutput {
   const facilityList = initialFacilities.map(f => f.name).join(', ');
 
   let systemPrompt = `You are a helpful assistant for the Simhastha 2028 event in Ujjain.
-    You must respond in the same language as the user's message. You support English and Hindi.
+    You must respond in the same language as the user's message. You support English, Hindi, Hinglish, Marathi, Bangla, Gujarati, Tamil, Telugu, Kannada, Punjabi, Bhojpuri, and Odia.
     The user may ask for directions. If so, use the getDirections tool. When you use the getDirections tool, take the message from the tool's output and use it as your main text response. Also, pass the route object from the tool's output into the route field of your response.
     If the user asks to find a specific facility, provide a helpful text response and also output the facility's ID in the facilityId field.
     The available facilities are: ${facilityList}. You must only use facilities from this list.
-    The ID for each facility is its name, but in snake_case with an underscore and a number at the end (e.g., 'Ramghat Parking' is 'park_1', 'Anjushree Hotel' is 'hotel_1').
+    The ID for each facility is its name, but in snake_case with an underscore and a number at the end (e.g., 'Ramghat Parking' is 'park_1', 'Anjushree Hotel' is 'hotel_1', 'Mahakaleshwar Temple' is 'temple_1').
     Here are the facility names and their corresponding IDs:
     ${initialFacilities.map(f => `- ${f.name}: ${f.id}`).join('\n')}
     `;
@@ -90,10 +91,13 @@ export async function* chat(input: ChatInput): ChatOutput {
         fullText += chunk.output.text;
       }
       yield chunk.output;
+    } else if (chunk.toolRequest) {
+      // If there's a tool request but no immediate text output, we can still yield a placeholder
+      yield { text: '' };
     }
   }
 
-  if (fullText) {
+  if (fullText && fullText.trim()) {
     try {
       const audio = await textToSpeech(fullText);
       yield { text: '', audio };
