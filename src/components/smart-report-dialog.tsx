@@ -59,7 +59,9 @@ const renderMessageContent = (content: string) => {
 };
 
 export function ChatbotDialog({ open, onOpenChange, userPosition, onLocateFacility, onShowDirections }: ChatbotDialogProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([
+    { role: "model", content: "Jai Shree Mahakal! How can I help you?" },
+  ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -142,7 +144,7 @@ export function ChatbotDialog({ open, onOpenChange, userPosition, onLocateFacili
         <DialogHeader>
           <DialogTitle className="font-headline">Chatbot</DialogTitle>
           <DialogDescription>
-            Ask me anything about Simhastha 2028.
+            Your guide to Simhastha 2028.
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
