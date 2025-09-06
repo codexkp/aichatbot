@@ -70,7 +70,7 @@ export function ChatbotDialog({ open, onOpenChange, userPosition, onLocateFacili
     if (SpeechRecognition) {
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.continuous = false;
-      recognitionRef.current.lang = 'en-US';
+      recognitionRef.current.lang = 'hi-IN';
       recognitionRef.current.interimResults = false;
 
       recognitionRef.current.onresult = (event: any) => {
