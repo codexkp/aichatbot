@@ -13,7 +13,7 @@ import {
   DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, MessageCircle, Send } from "lucide-react";
 import { chat } from "@/ai/flows/chatbot";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "./ui/avatar";
@@ -25,10 +25,10 @@ interface Message {
 }
 
 interface ChatbotDialogProps {
-  children: ReactNode;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userPosition: Position | null;
+  onLocateFacility: (facilityId: string) => void;
 }
 
 const renderMessageContent = (content: string) => {
@@ -57,7 +57,7 @@ const renderMessageContent = (content: string) => {
   );
 };
 
-export function ChatbotDialog({ children, open, onOpenChange, userPosition }: ChatbotDialogProps) {
+export function ChatbotDialog({ open, onOpenChange, userPosition, onLocateFacility }: ChatbotDialogProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -98,14 +98,19 @@ export function ChatbotDialog({ children, open, onOpenChange, userPosition }: Ch
       
       let content = '';
       for await (const chunk of stream) {
-        content += chunk;
-        setMessages(prev => {
-            const lastMsg = prev[prev.length - 1];
-            if (lastMsg.role === 'model') {
-                return [...prev.slice(0, -1), { ...lastMsg, content }];
-            }
-            return prev;
-        });
+        if (chunk.text) {
+            content += chunk.text;
+            setMessages(prev => {
+                const lastMsg = prev[prev.length - 1];
+                if (lastMsg.role === 'model') {
+                    return [...prev.slice(0, -1), { ...lastMsg, content }];
+                }
+                return prev;
+            });
+        }
+        if (chunk.facilityId) {
+            onLocateFacility(chunk.facilityId);
+        }
       }
 
     } catch (error) {
@@ -122,7 +127,12 @@ export function ChatbotDialog({ children, open, onOpenChange, userPosition }: Ch
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger asChild>
+        <Button variant="outline" className="bg-transparent">
+          <MessageCircle className="mr-2 h-4 w-4" />
+          Chatbot
+        </Button>
+      </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] md:max-w-lg flex flex-col h-[70vh]">
         <DialogHeader>
           <DialogTitle className="font-headline">Chatbot</DialogTitle>

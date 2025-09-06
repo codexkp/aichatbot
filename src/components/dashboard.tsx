@@ -23,9 +23,10 @@ import { Header } from "@/components/header";
 import { Logo } from "@/components/logo";
 import { FacilityCard } from "@/components/facility-card";
 import { Button } from "./ui/button";
-import { Loader2, Navigation, ParkingCircle, Hotel, Siren, LocateFixed } from "lucide-react";
+import { Loader2, Navigation, ParkingCircle, Hotel, Siren } from "lucide-react";
 import { analyzeParkingCrowding } from "@/ai/flows/crowding-analysis-and-alert";
 import { useToast } from "@/hooks/use-toast";
+import { ChatbotDialog } from "@/components/smart-report-dialog";
 
 const MapView = dynamic(() => import('@/components/map-view'), {
   ssr: false,
@@ -46,6 +47,15 @@ export function Dashboard() {
   const handleSelectFacility = React.useCallback((facility: AnyFacility) => {
     setSelectedFacility(facility);
   }, []);
+
+  const handleLocateFacility = React.useCallback((facilityId: string) => {
+    const facility = initialFacilities.find(f => f.id === facilityId);
+    if (facility) {
+      setSelectedFacility(facility);
+      setIsChatbotOpen(false);
+    }
+  }, []);
+
 
   const filteredFacilities = React.useMemo(() => {
     if (activeFilter === "all") {
@@ -69,7 +79,7 @@ export function Dashboard() {
       () => {
         toast({
           title: 'Location Access Denied',
-          description: "We couldn't access your location. Please enable it in your browser settings.",
+          description: "We couldn't access your location. Some features may be unavailable.",
           variant: 'destructive',
         });
       }
@@ -179,7 +189,14 @@ export function Dashboard() {
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
-        <Header isChatbotOpen={isChatbotOpen} onChatbotOpenChange={setIsChatbotOpen} userPosition={userPosition}/>
+        <Header onChatbotOpenChange={setIsChatbotOpen}>
+            <ChatbotDialog 
+                open={isChatbotOpen} 
+                onOpenChange={setIsChatbotOpen} 
+                userPosition={userPosition}
+                onLocateFacility={handleLocateFacility}
+            />
+        </Header>
         <div className="flex-1 relative">
           <div className={isChatbotOpen ? 'hidden' : 'block w-full h-full'}>
             <MapView

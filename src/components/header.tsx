@@ -1,21 +1,18 @@
 "use client";
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { ChatbotDialog } from "@/components/smart-report-dialog";
 import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Logo } from "./logo";
 import * as React from "react";
-import type { Position } from "@/types";
 
 interface HeaderProps {
-  isChatbotOpen: boolean;
   onChatbotOpenChange: (open: boolean) => void;
-  userPosition: Position | null;
+  children: React.ReactNode;
 }
 
-export function Header({ isChatbotOpen, onChatbotOpenChange, userPosition }: HeaderProps) {
+export function Header({ onChatbotOpenChange, children }: HeaderProps) {
   const isMobile = useIsMobile();
 
   return (
@@ -25,12 +22,7 @@ export function Header({ isChatbotOpen, onChatbotOpenChange, userPosition }: Hea
         {isMobile && <Logo isMobile={true} />}
       </div>
       
-      <ChatbotDialog open={isChatbotOpen} onOpenChange={onChatbotOpenChange} userPosition={userPosition}>
-        <Button variant="outline" className="bg-transparent">
-          <MessageCircle className="mr-2 h-4 w-4" />
-          Chatbot
-        </Button>
-      </ChatbotDialog>
+      {children}
     </header>
   );
 }
