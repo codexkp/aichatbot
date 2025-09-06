@@ -11,7 +11,7 @@ export function Logo({ isMobile = false }: { isMobile?: boolean }) {
           "font-headline text-xl font-bold tracking-wider text-primary",
           isMobile && "text-lg"
       )}>
-        Simhastha Seeker
+        Simhastha Margdarshak
       </h1>
     </div>
   );

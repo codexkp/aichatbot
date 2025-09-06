@@ -171,7 +171,7 @@ export function ChatbotDialog({ open, onOpenChange, userPosition, onLocateFacili
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] md:max-w-lg flex flex-col h-[70vh]">
         <DialogHeader>
-          <DialogTitle className="font-headline">Simhastha Seeker</DialogTitle>
+          <DialogTitle className="font-headline">Simhastha Margdarshak</DialogTitle>
           <DialogDescription>
             Your AI guide for Simhastha 2028. Ask me anything, or use the mic to speak.
           </DialogDescription>

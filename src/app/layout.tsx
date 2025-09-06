@@ -4,7 +4,7 @@ import './globals.css';
 import "leaflet/dist/leaflet.css";
 
 export const metadata: Metadata = {
-  title: 'Simhastha Seeker',
+  title: 'Simhastha Margdarshak',
   description: 'Your guide to Simhastha 2028 facilities.',
 };
 
