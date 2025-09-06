@@ -38,6 +38,24 @@ export const parkingFacilities: Parking[] = [
     occupancy: 1500,
     status: 'normal',
   },
+  {
+    id: "park_5",
+    name: "Ujjain Railway Station Parking",
+    type: "parking",
+    position: { lat: 23.178, lng: 75.785 },
+    capacity: 300,
+    occupancy: 150,
+    status: 'normal',
+    },
+    {
+    id: "park_6",
+    name: "Freeganj Parking",
+    type: "parking",
+    position: { lat: 23.17, lng: 75.78 },
+    capacity: 400,
+    occupancy: 200,
+    status: 'normal',
+    }
 ];
 
 export const hotelFacilities: Hotel[] = [
@@ -67,6 +85,33 @@ export const hotelFacilities: Hotel[] = [
     amenities: ["Wi-Fi", "Restaurant", "Parking"],
     contact: "+91-91091-09121",
     distance: "3km",
+  },
+  {
+    id: "hotel_4",
+    name: "Hotel Shanti Palace",
+    type: "hotel",
+    position: { lat: 23.180, lng: 75.791 },
+    amenities: ["Wi-Fi", "Restaurant"],
+    contact: "+91-734-4010100",
+    distance: "2.5km",
+  },
+  {
+    id: "hotel_5",
+    name: "Hotel Atharva",
+    type: "hotel",
+    position: { lat: 23.165, lng: 75.788 },
+    amenities: ["Wi-Fi", "AC", "Parking"],
+    contact: "+91-734-2533300",
+    distance: "3.5km",
+  },
+  {
+    id: "hotel_6",
+    name: "Hotel Kalpana Palace",
+    type: "hotel",
+    position: { lat: 23.183, lng: 75.771 },
+    amenities: ["Room Service", "Parking"],
+    contact: "+91-734-2553332",
+    distance: "0.8km",
   },
 ];
 
@@ -111,6 +156,38 @@ export const emergencyFacilities: EmergencyService[] = [
     position: { lat: 23.1825, lng: 75.7675 },
     contact: "100"
   },
+   {
+    id: "emer_6",
+    name: "Kotwali Police Station",
+    type: "emergency",
+    serviceType: "police_station",
+    position: { lat: 23.1848, lng: 75.7786 },
+    contact: "100"
+  },
+  {
+    id: "emer_7",
+    name: "Jiwajiganj Police Station",
+    type: "emergency",
+    serviceType: "police_station",
+    position: { lat: 23.1901, lng: 75.7723 },
+    contact: "100"
+  },
+  {
+    id: "emer_8",
+    name: "Madhav Nagar Hospital",
+    type: "emergency",
+    serviceType: "hospital",
+    position: { lat: 23.1695, lng: 75.7891 },
+    contact: "+91-734-2511255"
+  },
+  {
+    id: "emer_9",
+    name: "Charak Hospital",
+    type: "emergency",
+    serviceType: "hospital",
+    position: { lat: 23.1852, lng: 75.7813 },
+    contact: "+91-734-2550525"
+  }
 ];
 
 export const templeFacilities: Temple[] = [
@@ -134,6 +211,27 @@ export const templeFacilities: Temple[] = [
         type: "temple",
         position: { lat: 23.1950, lng: 75.7533 },
         deity: "Lord Kal Bhairav"
+    },
+    {
+        id: "temple_4",
+        name: "Chintaman Ganesh Temple",
+        type: "temple",
+        position: { lat: 23.1583, lng: 75.7334 },
+        deity: "Lord Ganesha"
+    },
+    {
+        id: "temple_5",
+        name: "Mangalnath Temple",
+        type: "temple",
+        position: { lat: 23.2038, lng: 75.7663 },
+        deity: "Lord Shiva (Mangal)"
+    },
+    {
+        id: "temple_6",
+        name: "Sandipani Ashram",
+        type: "temple",
+        position: { lat: 23.2017, lng: 75.7725 },
+        deity: "Guru Sandipani"
     }
 ];
 
@@ -150,6 +248,34 @@ export const lostAndFoundFacilities: LostAndFound[] = [
         name: "Lost & Found Center - Mahakal Temple",
         type: "lost_and_found",
         position: { lat: 23.1818, lng: 75.7685 },
+        contact: "100"
+    },
+    {
+        id: "lost_3",
+        name: "Lost & Found Center - Nanakheda",
+        type: "lost_and_found",
+        position: { lat: 23.1730, lng: 75.7950 },
+        contact: "100"
+    },
+    {
+        id: "lost_4",
+        name: "Lost & Found Center - Triveni Mela",
+        type: "lost_and_found",
+        position: { lat: 23.1615, lng: 75.7635 },
+        contact: "100"
+    },
+    {
+        id: "lost_5",
+        name: "Lost & Found Center - Harsiddhi",
+        type: "lost_and_found",
+        position: { lat: 23.1832, lng: 75.7650 },
+        contact: "100"
+    },
+    {
+        id: "lost_6",
+        name: "Lost & Found Center - Railway Station",
+        type: "lost_and_found",
+        position: { lat: 23.1782, lng: 75.7852 },
         contact: "100"
     }
 ];
@@ -168,6 +294,34 @@ export const ghatFacilities: Ghat[] = [
         type: "ghat",
         position: { lat: 23.1865, lng: 75.7645 },
         river: "Shipra"
+    },
+    {
+        id: "ghat_3",
+        name: "Narsingh Ghat",
+        type: "ghat",
+        position: { lat: 23.1880, lng: 75.7638 },
+        river: "Shipra"
+    },
+    {
+        id: "ghat_4",
+        name: "Siddhwat Ghat",
+        type: "ghat",
+        position: { lat: 23.2081, lng: 75.7502 },
+        river: "Shipra"
+    },
+    {
+        id: "ghat_5",
+        name: "Mangalnath Ghat",
+        type: "ghat",
+        position: { lat: 23.2040, lng: 75.7660 },
+        river: "Shipra"
+    },
+    {
+        id: "ghat_6",
+        name: "Triveni Ghat",
+        type: "ghat",
+        position: { lat: 23.1600, lng: 75.7620 },
+        river: "Shipra"
     }
 ];
 
@@ -185,6 +339,34 @@ export const akhadaFacilities: Akhada[] = [
         type: "akhada",
         position: { lat: 23.1880, lng: 75.7620 },
         sect: "Shaiva"
+    },
+    {
+        id: "akhada_3",
+        name: "Mahanirvani Akhada",
+        type: "akhada",
+        position: { lat: 23.182, lng: 75.763 },
+        sect: "Shaiva"
+    },
+    {
+        id: "akhada_4",
+        name: "Atal Akhada",
+        type: "akhada",
+        position: { lat: 23.181, lng: 75.764 },
+        sect: "Shaiva"
+    },
+    {
+        id: "akhada_5",
+        name: "Avahan Akhada",
+        type: "akhada",
+        position: { lat: 23.189, lng: 75.761 },
+        sect: "Shaiva"
+    },
+    {
+        id: "akhada_6",
+        name: "Nirmal Akhada",
+        type: "akhada",
+        position: { lat: 23.190, lng: 75.760 },
+        sect: "Sikh"
     }
 ];
 
