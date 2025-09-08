@@ -59,13 +59,7 @@ export function Dashboard() {
       setSelectedFacility(facility);
       setMapCenter(facility.position);
       setIsChatbotOpen(false);
-      
-      // Update filter to show the located facility's type
-      if (facility.type === 'emergency' && facility.serviceType === 'police_station') {
-        setActiveFilter('police_station');
-      } else {
-        setActiveFilter(facility.type);
-      }
+      setActiveFilter("all");
     }
   }, []);
   
@@ -73,6 +67,7 @@ export function Dashboard() {
     setRoute(route);
     setSelectedFacility(null);
     setActiveFilter("all"); 
+    setIsChatbotOpen(false);
   }, []);
 
 
@@ -171,7 +166,7 @@ export function Dashboard() {
     }
   };
 
-  const showMap = activeFilter === 'all' && !isChatbotOpen;
+  const showMap = activeFilter === 'all';
 
   return (
     <SidebarProvider>
