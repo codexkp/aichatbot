@@ -113,7 +113,8 @@ export function Dashboard() {
           description: "We couldn't access your location. Some features may be unavailable.",
           variant: 'destructive',
         });
-      }
+      },
+      { enableHighAccuracy: true }
     );
   }, [toast]);
 

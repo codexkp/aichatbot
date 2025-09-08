@@ -27,8 +27,8 @@ const createCustomIcon = (facility: AnyFacility | { type: 'user' } | { type: 'de
     const markerHtml = renderToStaticMarkup(
       <MapMarker facility={facility} isSelected={isSelected} />
     );
-    const iconSize: [number, number] = facility.type === 'user' ? [20, 20] : [40, 40];
-    const iconAnchor: [number, number] = facility.type === 'user' ? [10, 10] : [20, 40];
+    const iconSize: [number, number] = facility.type === 'user' ? [24, 24] : [40, 40];
+    const iconAnchor: [number, number] = facility.type === 'user' ? [12, 12] : [20, 40];
 
     return divIcon({
       html: markerHtml,
@@ -65,10 +65,32 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
     };
   }, []);
   
+  // Effect for user position marker
+  React.useEffect(() => {
+    if (mapInstanceRef.current && userPosition) {
+      const userIcon = createCustomIcon({ type: 'user' }, false);
+      if (userMarkerRef.current) {
+        userMarkerRef.current.setLatLng([userPosition.lat, userPosition.lng]);
+        userMarkerRef.current.setIcon(userIcon);
+      } else {
+        const marker = new LeafletMarker([userPosition.lat, userPosition.lng], {
+          icon: userIcon,
+          zIndexOffset: 1000
+        });
+        marker.addTo(mapInstanceRef.current);
+        userMarkerRef.current = marker;
+      }
+    } else if (userMarkerRef.current && mapInstanceRef.current) {
+        userMarkerRef.current.remove();
+        userMarkerRef.current = null;
+    }
+  }, [userPosition]);
+
+
   // Effect to draw facility markers
   React.useEffect(() => {
       const layer = markerLayerRef.current;
-      if (!layer) return;
+      if (!layer || !mapInstanceRef.current) return;
 
       layer.clearLayers();
       facilities.forEach(facility => {
@@ -104,8 +126,8 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
                 if (isStart) {
                     const isUserLocation = userPosition && waypoint.latLng.lat === userPosition.lat && waypoint.latLng.lng === userPosition.lng;
                     if (isUserLocation) {
-                        // Use a specific user marker icon for the start of the route
-                        return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon({ type: 'user' }, true), draggable: false, zIndexOffset: 1000 });
+                        // Let the dedicated user marker handle this. Don't create a route marker for it.
+                        return null;
                     }
                     const startFacility = facilities.find(f => f.position.lat === waypoint.latLng.lat && f.position.lng === waypoint.latLng.lng);
                     if(startFacility){
@@ -127,32 +149,6 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
         }
     }
   }, [route, userPosition, facilities]);
-  
-  // Effect for user position marker
-  React.useEffect(() => {
-    if (mapInstanceRef.current && userPosition) {
-      const userIcon = createCustomIcon({ type: 'user' }, false);
-      if (userMarkerRef.current) {
-        userMarkerRef.current.setLatLng([userPosition.lat, userPosition.lng]);
-        userMarkerRef.current.setIcon(userIcon);
-      } else {
-        const marker = new LeafletMarker([userPosition.lat, userPosition.lng], {
-          icon: userIcon,
-          zIndexOffset: 1000
-        });
-        if(mapInstanceRef.current) {
-            marker.addTo(mapInstanceRef.current);
-            userMarkerRef.current = marker;
-        }
-      }
-    } else if (userMarkerRef.current) {
-        // This condition is important if userPosition becomes null
-        if (mapInstanceRef.current) {
-            userMarkerRef.current.remove();
-        }
-        userMarkerRef.current = null;
-    }
-  }, [userPosition]);
   
   // Effect for centering the map
   React.useEffect(() => {
@@ -178,21 +174,13 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
             if (facility) {
                 const isSelected = selectedFacility?.id === facility.id;
                 marker.setIcon(createCustomIcon(facility, isSelected));
+                if (isSelected) {
+                   marker.setZIndexOffset(100);
+                } else {
+                   marker.setZIndexOffset(0);
+                }
             }
         });
-        
-        if (selectedFacility) {
-            mapInstanceRef.current.setView(
-                [selectedFacility.position.lat, selectedFacility.position.lng], 
-                mapInstanceRef.current.getZoom() || defaultZoom,
-                {
-                    animate: true,
-                    pan: {
-                        duration: 0.5
-                    }
-                }
-            );
-        }
     }
   }, [selectedFacility, facilities]);
 
