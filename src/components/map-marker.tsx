@@ -11,14 +11,22 @@ interface MapMarkerProps {
 }
 
 export const MapMarker = ({ facility, isSelected }: MapMarkerProps) => {
+    if (facility.type === 'user') {
+        return (
+            <div className={cn(
+                'relative flex items-center justify-center',
+                isSelected && 'z-10'
+            )}>
+                <div className="w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow-md"></div>
+            </div>
+        );
+    }
+
     const baseClasses = "relative w-10 h-10 rounded-full flex items-center justify-center text-white shadow-lg transform transition-transform duration-300";
     const selectedClasses = "scale-110 z-10";
     const pinClasses = "after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:top-[90%] after:border-8 after:border-t-[12px] after:border-transparent";
 
     const getIcon = () => {
-        if (facility.type === 'user') {
-            return <Navigation className="w-5 h-5" />;
-        }
         if (facility.type === 'destination') {
             return <MapPin className="w-5 h-5" />;
         }
@@ -46,9 +54,6 @@ export const MapMarker = ({ facility, isSelected }: MapMarkerProps) => {
     };
 
     const getColorClasses = () => {
-        if (facility.type === 'user') {
-            return 'bg-blue-500 after:border-t-blue-500';
-        }
          if (facility.type === 'destination') {
             return 'bg-primary after:border-t-primary';
         }

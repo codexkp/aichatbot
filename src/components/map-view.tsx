@@ -27,11 +27,14 @@ const createCustomIcon = (facility: AnyFacility | { type: 'user' } | { type: 'de
     const markerHtml = renderToStaticMarkup(
       <MapMarker facility={facility} isSelected={isSelected} />
     );
+    const iconSize: [number, number] = facility.type === 'user' ? [20, 20] : [40, 40];
+    const iconAnchor: [number, number] = facility.type === 'user' ? [10, 10] : [20, 40];
+
     return divIcon({
       html: markerHtml,
       className: 'dummy',
-      iconSize: [40, 40],
-      iconAnchor: [20, 40],
+      iconSize: iconSize,
+      iconAnchor: iconAnchor,
     });
 };
 
@@ -101,7 +104,8 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
                 if (isStart) {
                     const isUserLocation = userPosition && waypoint.latLng.lat === userPosition.lat && waypoint.latLng.lng === userPosition.lng;
                     if (isUserLocation) {
-                        return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon({ type: 'user' }, true), draggable: false, zIndexOffset: 1000 });
+                        // Don't create a marker for user's start location, it is handled by userMarkerRef
+                        return null;
                     }
                     const startFacility = facilities.find(f => f.position.lat === waypoint.latLng.lat && f.position.lng === waypoint.latLng.lng);
                     if(startFacility){
@@ -141,6 +145,9 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
             userMarkerRef.current = marker;
         }
       }
+    } else if (userMarkerRef.current) {
+        userMarkerRef.current.remove();
+        userMarkerRef.current = null;
     }
   }, [userPosition]);
   
