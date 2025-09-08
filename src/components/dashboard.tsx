@@ -248,7 +248,7 @@ export function Dashboard() {
           </div>
         </Header>
         <div className="flex-1 relative">
-           <div className={cn('w-full h-full', { 'invisible': isChatbotOpen || activeFilter !== 'all' })}>
+           <div className="w-full h-full">
             <MapView
                 facilities={filteredFacilities}
                 onSelectFacility={handleSelectFacility}

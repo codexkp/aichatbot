@@ -261,5 +261,3 @@ export function ChatbotDialog({ open, onOpenChange, userPosition, onLocateFacili
     </Dialog>
   );
 }
-
-    
