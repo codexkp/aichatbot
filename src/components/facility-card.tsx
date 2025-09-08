@@ -26,8 +26,9 @@ import {
   Building2,
   Shield,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-export function FacilityCard({ facility }: { facility: AnyFacility }) {
+export function FacilityCard({ facility, className }: { facility: AnyFacility, className?: string }) {
   const renderIcon = () => {
     switch (facility.type) {
       case "parking":
@@ -55,7 +56,7 @@ export function FacilityCard({ facility }: { facility: AnyFacility }) {
   };
 
   return (
-    <Card className="w-full shadow-lg border-accent/20">
+    <Card className={cn("w-full shadow-lg border-accent/20 hover:border-accent/60 transition-colors", className)}>
       <CardHeader>
         <div className="flex items-center gap-3">
           <div className="flex-shrink-0">{renderIcon()}</div>

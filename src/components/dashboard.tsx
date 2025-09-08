@@ -72,6 +72,7 @@ export function Dashboard() {
   const handleShowDirections = React.useCallback((route: Route) => {
     setRoute(route);
     setSelectedFacility(null);
+    setActiveFilter("all"); 
   }, []);
 
 
@@ -88,6 +89,7 @@ export function Dashboard() {
   const handleLocateMe = React.useCallback(() => {
     if (userPosition) {
       setMapCenter(userPosition);
+      setActiveFilter("all");
     }
   }, [userPosition]);
 
@@ -169,6 +171,8 @@ export function Dashboard() {
     }
   };
 
+  const showMap = activeFilter === 'all' && !isChatbotOpen;
+
   return (
     <SidebarProvider>
       <Sidebar>
@@ -228,7 +232,7 @@ export function Dashboard() {
                         <FacilityCard facility={selectedFacility} />
                     ) : (
                         <div className="text-center text-sm text-muted-foreground p-4 border-dashed border rounded-lg">
-                            <p>Select a facility on the map to see details.</p>
+                            <p>Select a facility on the map or list to see details.</p>
                         </div>
                     )}
                 </div>
@@ -249,22 +253,34 @@ export function Dashboard() {
           </div>
         </Header>
         <div className="flex-1 relative">
-           <div className="w-full h-full">
-            <MapView
-                facilities={filteredFacilities}
-                onSelectFacility={handleSelectFacility}
-                selectedFacility={selectedFacility}
-                userPosition={userPosition}
-                center={mapCenter}
-                route={route}
-            />
-             <div className="absolute bottom-4 right-4 z-[500]">
-                <Button size="icon" onClick={handleLocateMe} disabled={!userPosition} className="rounded-full shadow-lg">
-                    <Crosshair className="h-5 w-5" />
-                    <span className="sr-only">Locate Me</span>
-                </Button>
+           {showMap ? (
+            <div className="w-full h-full">
+              <MapView
+                  facilities={filteredFacilities}
+                  onSelectFacility={handleSelectFacility}
+                  selectedFacility={selectedFacility}
+                  userPosition={userPosition}
+                  center={mapCenter}
+                  route={route}
+              />
+               <div className="absolute bottom-4 right-4 z-[500]">
+                  <Button size="icon" onClick={handleLocateMe} disabled={!userPosition} className="rounded-full shadow-lg">
+                      <Crosshair className="h-5 w-5" />
+                      <span className="sr-only">Locate Me</span>
+                  </Button>
+              </div>
             </div>
-          </div>
+           ) : (
+            <div className="w-full h-full bg-muted p-4 overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredFacilities.map(facility => (
+                  <button key={facility.id} onClick={() => handleSelectFacility(facility)} className="w-full text-left">
+                     <FacilityCard facility={facility} />
+                  </button>
+                ))}
+              </div>
+            </div>
+           )}
         </div>
       </SidebarInset>
     </SidebarProvider>
