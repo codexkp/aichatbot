@@ -13,11 +13,11 @@ interface MapMarkerProps {
 export const MapMarker = ({ facility, isSelected }: MapMarkerProps) => {
     if (facility.type === 'user') {
         return (
-            <div className={cn(
+             <div className={cn(
                 'relative flex items-center justify-center',
                 isSelected && 'z-10'
             )}>
-                <div className="w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow-md"></div>
+                <div className="w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow-md animate-pulse"></div>
             </div>
         );
     }

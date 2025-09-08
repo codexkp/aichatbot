@@ -104,8 +104,8 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
                 if (isStart) {
                     const isUserLocation = userPosition && waypoint.latLng.lat === userPosition.lat && waypoint.latLng.lng === userPosition.lng;
                     if (isUserLocation) {
-                        // Don't create a marker for user's start location, it is handled by userMarkerRef
-                        return null;
+                        // Use a specific user marker icon for the start of the route
+                        return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon({ type: 'user' }, true), draggable: false, zIndexOffset: 1000 });
                     }
                     const startFacility = facilities.find(f => f.position.lat === waypoint.latLng.lat && f.position.lng === waypoint.latLng.lng);
                     if(startFacility){
@@ -115,7 +115,7 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
                     return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon({ type: 'destination' }, true), draggable: false, zIndexOffset: 1000 });
                 }
                 
-                // Fallback to a standard marker if no facility matches, which should not happen in normal flow.
+                // Fallback to a standard marker if no facility matches.
                 return new LeafletMarker(waypoint.latLng, {draggable: false});
             }
         }).addTo(mapInstanceRef.current);
@@ -146,7 +146,10 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
         }
       }
     } else if (userMarkerRef.current) {
-        userMarkerRef.current.remove();
+        // This condition is important if userPosition becomes null
+        if (mapInstanceRef.current) {
+            userMarkerRef.current.remove();
+        }
         userMarkerRef.current = null;
     }
   }, [userPosition]);
@@ -163,7 +166,7 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
     }
   }, [center]);
 
-  // Effect to update selected marker styling (e.g., when route is cleared)
+  // Effect to update selected marker styling
   React.useEffect(() => {
     if (mapInstanceRef.current && markerLayerRef.current) {
         markerLayerRef.current.eachLayer(l => {
@@ -181,7 +184,7 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
         if (selectedFacility) {
             mapInstanceRef.current.setView(
                 [selectedFacility.position.lat, selectedFacility.position.lng], 
-                mapInstanceRef.current.getZoom(),
+                mapInstanceRef.current.getZoom() || defaultZoom,
                 {
                     animate: true,
                     pan: {
