@@ -5,7 +5,7 @@ import * as React from 'react';
 import type { AnyFacility, Position, Route } from '@/types';
 import { MapMarker } from './map-marker';
 import { renderToStaticMarkup } from 'react-dom/server';
-import L, { divIcon, layerGroup, LayerGroup, Marker as LeafletMarker, LatLngExpression, LatLng } from 'leaflet';
+import L, { divIcon, layerGroup, LayerGroup, Marker as LeafletMarker, LatLngExpression, LatLng, Control } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
 import 'leaflet-routing-machine';
@@ -44,31 +44,47 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
   const markerLayerRef = React.useRef<LayerGroup | null>(null);
   const userMarkerRef = React.useRef<LeafletMarker | null>(null);
   const routeControlRef = React.useRef<L.Routing.Control | null>(null);
+  const layerControlRef = React.useRef<Control.Layers | null>(null);
+
 
   // Initialize map and handle its destruction
   React.useEffect(() => {
     if (mapRef.current && !mapInstanceRef.current) {
-      const map = L.map(mapRef.current).setView(ujjainCenter, defaultZoom);
-      mapInstanceRef.current = map;
-
-      L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      const streetLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
         attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a>'
-      }).addTo(map);
+      });
+      
+      const satelliteLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+        attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a>'
+      });
+      
+      const map = L.map(mapRef.current, {
+        layers: [streetLayer] // Default layer
+      }).setView(ujjainCenter, defaultZoom);
+      mapInstanceRef.current = map;
+      
+      const baseMaps = {
+          "Streets": streetLayer,
+          "Satellite": satelliteLayer
+      };
+
+      layerControlRef.current = L.control.layers(baseMaps).addTo(map);
 
       markerLayerRef.current = layerGroup().addTo(map);
     }
 
-    // Main cleanup function: This will be called when the component unmounts.
-    // It's crucial to clean up in the correct order.
+    // Main cleanup function
     return () => {
         const map = mapInstanceRef.current;
         if (map) {
-            // 1. First, remove the routing control if it exists.
             if (routeControlRef.current) {
-                routeControlRef.current.remove();
+                map.removeControl(routeControlRef.current);
                 routeControlRef.current = null;
             }
-            // 2. Then, destroy the map instance.
+            if(layerControlRef.current){
+                map.removeControl(layerControlRef.current);
+                layerControlRef.current = null;
+            }
             map.remove();
             mapInstanceRef.current = null;
         }
@@ -123,7 +139,7 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
 
     // Clear previous route if it exists
     if (routeControlRef.current) {
-      routeControlRef.current.remove();
+      map.removeControl(routeControlRef.current);
       routeControlRef.current = null;
     }
 

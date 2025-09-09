@@ -99,3 +99,15 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+.leaflet-control-layers {
+  background: hsl(var(--card));
+  border-radius: var(--radius);
+  border-color: hsl(var(--border));
+}
+.leaflet-control-layers-base label {
+  color: hsl(var(--card-foreground));
+}
+.leaflet-control-layers-selector {
+  color: hsl(var(--card-foreground));
+}
