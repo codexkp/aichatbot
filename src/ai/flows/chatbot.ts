@@ -103,6 +103,7 @@ export async function* chat(input: ChatInput): ChatOutput {
       yield { text: '', audio };
     } catch(e) {
       console.error("Error generating audio", e);
+      // Do not throw an error, just log it. The user has already received the text.
     }
   }
 }
