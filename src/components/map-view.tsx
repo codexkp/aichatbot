@@ -58,6 +58,7 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
       markerLayerRef.current = layerGroup().addTo(map);
     }
     
+    // Main cleanup function
     return () => {
         if (mapInstanceRef.current) {
             mapInstanceRef.current.remove();
@@ -85,8 +86,9 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
         userMarkerRef.current = marker;
       }
     } else if (userMarkerRef.current) {
-        // If userPosition becomes null, remove the marker
-        userMarkerRef.current.remove();
+        if (map.hasLayer(userMarkerRef.current)) {
+            userMarkerRef.current.remove();
+        }
         userMarkerRef.current = null;
     }
   }, [userPosition]);
@@ -113,7 +115,7 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
     const map = mapInstanceRef.current;
     if (!map) return;
 
-    // Clear previous route if it exists
+    // Clear previous route if it exists and map is valid
     if (routeControlRef.current) {
       map.removeControl(routeControlRef.current);
       routeControlRef.current = null;
@@ -163,14 +165,6 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
       }).addTo(map);
       routeControlRef.current = control;
     }
-    
-    // Cleanup function
-    return () => {
-        if (mapInstanceRef.current && routeControlRef.current) {
-            mapInstanceRef.current.removeControl(routeControlRef.current);
-            routeControlRef.current = null;
-        }
-    };
   }, [route, userPosition, facilities]);
   
   // Effect for centering the map
