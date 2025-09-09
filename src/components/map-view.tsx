@@ -61,6 +61,17 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
     // Main cleanup function
     return () => {
         if (mapInstanceRef.current) {
+            // Clean up routing control
+            if (routeControlRef.current) {
+                mapInstanceRef.current.removeControl(routeControlRef.current);
+                routeControlRef.current = null;
+            }
+            // Clean up user marker
+            if (userMarkerRef.current) {
+                userMarkerRef.current.remove();
+                userMarkerRef.current = null;
+            }
+            // Finally, remove the map instance itself
             mapInstanceRef.current.remove();
             mapInstanceRef.current = null;
         }
@@ -138,7 +149,7 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
               userPosition &&
               waypoint.latLng.lat === userPosition.lat &&
               waypoint.latLng.lng === userPosition.lng;
-            if (isUserLocation) return null;
+            if (isUserLocation) return null; // Don't create a marker for user's location, it's already there
 
             const startFacility = facilities.find(
               (f) =>
@@ -152,7 +163,7 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
                 zIndexOffset: 1000,
               });
             }
-          } else {
+          } else { // This is the destination
             return new LeafletMarker(waypoint.latLng, {
               icon: createCustomIcon({ type: 'destination' }, true),
               draggable: false,
@@ -160,10 +171,17 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
             });
           }
 
-          return null;
+          return null; // Don't create markers for other cases
         },
       }).addTo(map);
       routeControlRef.current = control;
+    }
+    
+    return () => {
+        if (mapInstanceRef.current && routeControlRef.current) {
+            mapInstanceRef.current.removeControl(routeControlRef.current);
+            routeControlRef.current = null;
+        }
     }
   }, [route, userPosition, facilities]);
   
