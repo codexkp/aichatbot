@@ -43,8 +43,7 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
   const mapInstanceRef = React.useRef<L.Map | null>(null);
   const markerLayerRef = React.useRef<LayerGroup | null>(null);
   const userMarkerRef = React.useRef<LeafletMarker | null>(null);
-  const routeControlRef = React.useRef<L.Routing.Control | null>(null);
-  const layerControlRef = React.useRef<Control.Layers | null>(null);
+  const destinationMarkerRef = React.useRef<LeafletMarker | null>(null);
 
 
   // Initialize map and handle its destruction
@@ -66,16 +65,6 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
     return () => {
         const map = mapInstanceRef.current;
         if (map) {
-            // CRUCIAL: Remove routing control BEFORE destroying the map.
-            if (routeControlRef.current) {
-                map.removeControl(routeControlRef.current);
-                routeControlRef.current = null;
-            }
-            if(layerControlRef.current){
-                map.removeControl(layerControlRef.current);
-                layerControlRef.current = null;
-            }
-
             // Remove layers and markers
             if (markerLayerRef.current) {
                 markerLayerRef.current.clearLayers();
@@ -83,6 +72,10 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
             if (userMarkerRef.current) {
                 userMarkerRef.current.remove();
                 userMarkerRef.current = null;
+            }
+             if (destinationMarkerRef.current) {
+                destinationMarkerRef.current.remove();
+                destinationMarkerRef.current = null;
             }
 
             // Finally, remove the map
@@ -133,74 +126,28 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
       });
   }, [facilities, selectedFacility, onSelectFacility]);
 
-  // Effect to draw or clear the route
+  // Effect to draw or clear the route destination
   React.useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
 
-    // Clear previous route if it exists
-    if (routeControlRef.current) {
-        map.removeControl(routeControlRef.current);
-        routeControlRef.current = null;
+    // Clear previous destination if it exists
+    if (destinationMarkerRef.current) {
+        destinationMarkerRef.current.remove();
+        destinationMarkerRef.current = null;
     }
 
     if (route) {
-      const start = new LatLng(route.start.lat, route.start.lng);
-      const destination = new LatLng(route.destination.lat, route.destination.lng);
-
-      // This is a workaround to prevent errors when the component unmounts
-      // See: https://github.com/perliedman/leaflet-routing-machine/issues/223
-      const control = L.Routing.control({
-        waypoints: [start, destination],
-        routeWhileDragging: false,
-        show: false,
-        addWaypoints: false,
-        createMarker: (waypointIndex, waypoint) => {
-          const isStart = waypointIndex === 0;
-
-          if (isStart) {
-            const isUserLocation =
-              userPosition &&
-              waypoint.latLng.lat === userPosition.lat &&
-              waypoint.latLng.lng === userPosition.lng;
-            if (isUserLocation) return null; 
-
-            const startFacility = facilities.find(
-              (f) =>
-                f.position.lat === waypoint.latLng.lat &&
-                f.position.lng === waypoint.latLng.lng
-            );
-            if (startFacility) {
-              return new LeafletMarker(waypoint.latLng, {
-                icon: createCustomIcon(startFacility, true),
-                draggable: false,
-                zIndexOffset: 1000,
-              });
-            }
-          } else { 
-            return new LeafletMarker(waypoint.latLng, {
+        const destination = new LatLng(route.destination.lat, route.destination.lng);
+        destinationMarkerRef.current = new LeafletMarker(destination, {
               icon: createCustomIcon({ type: 'destination' }, true),
               draggable: false,
               zIndexOffset: 1000,
-            });
-          }
+        }).addTo(map);
 
-          return null; 
-        },
-      });
-
-      // Monkey-patch the control to be safer on removal
-      const originalOnRemove = control.onRemove;
-      control.onRemove = function (mapInstance) {
-        if (mapInstance) {
-          originalOnRemove.call(this, mapInstance);
-        }
-      };
-      
-      control.addTo(map);
-      routeControlRef.current = control;
+        map.fitBounds(L.latLngBounds([route.start, route.destination]), {padding: [50, 50]});
     }
-  }, [route, userPosition, facilities]);
+  }, [route]);
   
   // Effect for centering the map
   React.useEffect(() => {
