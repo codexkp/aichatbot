@@ -110,46 +110,66 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
 
   // Effect to draw or clear the route
   React.useEffect(() => {
-    if (!mapInstanceRef.current) return;
+    const map = mapInstanceRef.current;
+    if (!map) return;
 
-    // Clear existing route first
     if (routeControlRef.current) {
-        mapInstanceRef.current.removeControl(routeControlRef.current);
-        routeControlRef.current = null;
+      map.removeControl(routeControlRef.current);
+      routeControlRef.current = null;
     }
 
     if (route) {
-        const start = new LatLng(route.start.lat, route.start.lng);
-        const destination = new LatLng(route.destination.lat, route.destination.lng);
+      const start = new LatLng(route.start.lat, route.start.lng);
+      const destination = new LatLng(route.destination.lat, route.destination.lng);
 
-        routeControlRef.current = L.Routing.control({
-            waypoints: [start, destination],
-            routeWhileDragging: false,
-            show: false,
-            addWaypoints: false,
-            createMarker: (waypointIndex, waypoint, numberOfWaypoints) => {
-                const isStart = waypointIndex === 0;
-                
-                // Don't create a marker for the start point if it's the user's location,
-                // as the dedicated user marker already exists.
-                if (isStart) {
-                    const isUserLocation = userPosition && waypoint.latLng.lat === userPosition.lat && waypoint.latLng.lng === userPosition.lng;
-                    if (isUserLocation) return null;
+      const control = L.Routing.control({
+        waypoints: [start, destination],
+        routeWhileDragging: false,
+        show: false,
+        addWaypoints: false,
+        createMarker: (waypointIndex, waypoint) => {
+          const isStart = waypointIndex === 0;
 
-                    const startFacility = facilities.find(f => f.position.lat === waypoint.latLng.lat && f.position.lng === waypoint.latLng.lng);
-                    if(startFacility){
-                        return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon(startFacility, true), draggable: false, zIndexOffset: 1000 });
-                    }
-                } 
-                // Create a marker for the destination
-                else { 
-                    return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon({ type: 'destination' }, true), draggable: false, zIndexOffset: 1000 });
-                }
-                
-                return null; // Don't create default markers
+          if (isStart) {
+            const isUserLocation =
+              userPosition &&
+              waypoint.latLng.lat === userPosition.lat &&
+              waypoint.latLng.lng === userPosition.lng;
+            if (isUserLocation) return null;
+
+            const startFacility = facilities.find(
+              (f) =>
+                f.position.lat === waypoint.latLng.lat &&
+                f.position.lng === waypoint.latLng.lng
+            );
+            if (startFacility) {
+              return new LeafletMarker(waypoint.latLng, {
+                icon: createCustomIcon(startFacility, true),
+                draggable: false,
+                zIndexOffset: 1000,
+              });
             }
-        }).addTo(mapInstanceRef.current);
+          } else {
+            return new LeafletMarker(waypoint.latLng, {
+              icon: createCustomIcon({ type: 'destination' }, true),
+              draggable: false,
+              zIndexOffset: 1000,
+            });
+          }
+
+          return null;
+        },
+      }).addTo(map);
+      routeControlRef.current = control;
     }
+    
+    // Cleanup function
+    return () => {
+        if (map && routeControlRef.current) {
+            map.removeControl(routeControlRef.current);
+            routeControlRef.current = null;
+        }
+    };
   }, [route, userPosition, facilities]);
   
   // Effect for centering the map
