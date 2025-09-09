@@ -45,7 +45,7 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
   const userMarkerRef = React.useRef<LeafletMarker | null>(null);
   const routeControlRef = React.useRef<L.Routing.Control | null>(null);
 
-  // Initialize map
+  // Initialize map and handle its destruction
   React.useEffect(() => {
     if (mapRef.current && !mapInstanceRef.current) {
       const map = L.map(mapRef.current).setView(ujjainCenter, defaultZoom);
@@ -57,15 +57,19 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
 
       markerLayerRef.current = layerGroup().addTo(map);
     }
-    
-    // Main cleanup function
+
+    // Main cleanup function: This will be called when the component unmounts.
+    // It's crucial to clean up in the correct order.
     return () => {
-        // As per recommendation, destroy control first, then map.
-        if (routeControlRef.current) {
-            routeControlRef.current.remove();
-        }
-        if (mapInstanceRef.current) {
-            mapInstanceRef.current.remove();
+        const map = mapInstanceRef.current;
+        if (map) {
+            // 1. First, remove the routing control if it exists.
+            if (routeControlRef.current) {
+                routeControlRef.current.remove();
+                routeControlRef.current = null;
+            }
+            // 2. Then, destroy the map instance.
+            map.remove();
             mapInstanceRef.current = null;
         }
     };
@@ -82,12 +86,10 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
         userMarkerRef.current.setLatLng([userPosition.lat, userPosition.lng]);
         userMarkerRef.current.setIcon(userIcon);
       } else {
-        const marker = new LeafletMarker([userPosition.lat, userPosition.lng], {
+        userMarkerRef.current = new LeafletMarker([userPosition.lat, userPosition.lng], {
           icon: userIcon,
           zIndexOffset: 1000 // Ensure it's on top
-        });
-        marker.addTo(map);
-        userMarkerRef.current = marker;
+        }).addTo(map);
       }
     } else if (userMarkerRef.current) {
         if (map.hasLayer(userMarkerRef.current)) {
