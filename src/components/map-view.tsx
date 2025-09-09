@@ -68,7 +68,7 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
         if (map) {
             // CRUCIAL: Remove routing control BEFORE destroying the map.
             if (routeControlRef.current) {
-                routeControlRef.current.remove(); // This safely removes the control from the map
+                map.removeControl(routeControlRef.current);
                 routeControlRef.current = null;
             }
             if(layerControlRef.current){
@@ -140,7 +140,7 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
 
     // Clear previous route if it exists
     if (routeControlRef.current) {
-        routeControlRef.current.remove();
+        map.removeControl(routeControlRef.current);
         routeControlRef.current = null;
     }
 
@@ -148,6 +148,8 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
       const start = new LatLng(route.start.lat, route.start.lng);
       const destination = new LatLng(route.destination.lat, route.destination.lng);
 
+      // This is a workaround to prevent errors when the component unmounts
+      // See: https://github.com/perliedman/leaflet-routing-machine/issues/223
       const control = L.Routing.control({
         waypoints: [start, destination],
         routeWhileDragging: false,
@@ -185,7 +187,17 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
 
           return null; 
         },
-      }).addTo(map);
+      });
+
+      // Monkey-patch the control to be safer on removal
+      const originalOnRemove = control.onRemove;
+      control.onRemove = function (mapInstance) {
+        if (mapInstance) {
+          originalOnRemove.call(this, mapInstance);
+        }
+      };
+      
+      control.addTo(map);
       routeControlRef.current = control;
     }
   }, [route, userPosition, facilities]);
