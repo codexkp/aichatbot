@@ -60,25 +60,20 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
     
     // Main cleanup function
     return () => {
+        // As per recommendation, destroy control first, then map.
+        if (routeControlRef.current) {
+            // The 'remove' method handles removing the control from the map.
+            routeControlRef.current.remove();
+            routeControlRef.current = null;
+        }
         if (mapInstanceRef.current) {
-            // Clean up routing control
-            if (routeControlRef.current) {
-                mapInstanceRef.current.removeControl(routeControlRef.current);
-                routeControlRef.current = null;
-            }
-            // Clean up user marker
-            if (userMarkerRef.current) {
-                userMarkerRef.current.remove();
-                userMarkerRef.current = null;
-            }
-            // Finally, remove the map instance itself
             mapInstanceRef.current.remove();
             mapInstanceRef.current = null;
         }
     };
   }, []);
   
-  // Effect for user position marker - separated for reliability
+  // Effect for user position marker
   React.useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
@@ -126,9 +121,9 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
     const map = mapInstanceRef.current;
     if (!map) return;
 
-    // Clear previous route if it exists and map is valid
+    // Clear previous route if it exists
     if (routeControlRef.current) {
-      map.removeControl(routeControlRef.current);
+      routeControlRef.current.remove();
       routeControlRef.current = null;
     }
 
@@ -149,7 +144,7 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
               userPosition &&
               waypoint.latLng.lat === userPosition.lat &&
               waypoint.latLng.lng === userPosition.lng;
-            if (isUserLocation) return null; // Don't create a marker for user's location, it's already there
+            if (isUserLocation) return null; 
 
             const startFacility = facilities.find(
               (f) =>
@@ -163,7 +158,7 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
                 zIndexOffset: 1000,
               });
             }
-          } else { // This is the destination
+          } else { 
             return new LeafletMarker(waypoint.latLng, {
               icon: createCustomIcon({ type: 'destination' }, true),
               draggable: false,
@@ -171,17 +166,10 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
             });
           }
 
-          return null; // Don't create markers for other cases
+          return null; 
         },
       }).addTo(map);
       routeControlRef.current = control;
-    }
-    
-    return () => {
-        if (mapInstanceRef.current && routeControlRef.current) {
-            mapInstanceRef.current.removeControl(routeControlRef.current);
-            routeControlRef.current = null;
-        }
     }
   }, [route, userPosition, facilities]);
   
@@ -197,12 +185,11 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
     }
   }, [center]);
 
-  // Effect to update selected marker styling (without re-drawing all markers)
+  // Effect to update selected marker styling
   React.useEffect(() => {
     if (markerLayerRef.current) {
         markerLayerRef.current.eachLayer(l => {
             const marker = l as LeafletMarker;
-            // A bit of a hack: find the corresponding facility from the original array
             const facility = facilities.find(f => 
                 f.position.lat === marker.getLatLng().lat && 
                 f.position.lng === marker.getLatLng().lng
