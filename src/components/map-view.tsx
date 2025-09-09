@@ -113,6 +113,7 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
     const map = mapInstanceRef.current;
     if (!map) return;
 
+    // Clear previous route if it exists
     if (routeControlRef.current) {
       map.removeControl(routeControlRef.current);
       routeControlRef.current = null;
@@ -165,8 +166,8 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
     
     // Cleanup function
     return () => {
-        if (map && routeControlRef.current) {
-            map.removeControl(routeControlRef.current);
+        if (mapInstanceRef.current && routeControlRef.current) {
+            mapInstanceRef.current.removeControl(routeControlRef.current);
             routeControlRef.current = null;
         }
     };
