@@ -46,6 +46,7 @@ export function Dashboard() {
   const [mapCenter, setMapCenter] = React.useState<Position | null>(null);
   const [route, setRoute] = React.useState<Route | null>(null);
   const { toast } = useToast();
+  const notifiedCrowdedLots = React.useRef<Set<string>>(new Set());
 
   const handleSelectFacility = React.useCallback((facility: AnyFacility) => {
     setSelectedFacility(facility);
@@ -157,15 +158,7 @@ export function Dashboard() {
 
   // Crowding analysis
   React.useEffect(() => {
-    const checkCrowding = async () => {
-      const parkingData = facilities
-        .filter((f) => f.type === 'parking')
-        .map((f) => {
-          const park = f as Parking;
-          return `${park.name}: ${park.occupancy}/${park.capacity} (${park.status})`;
-        })
-        .join('\n');
-
+    const checkCrowding = async (parkingData: string, newlyCrowdedIds: string[]) => {
       try {
         const result = await analyzeParkingCrowding({parkingData});
 
@@ -176,6 +169,8 @@ export function Dashboard() {
             variant: 'destructive',
             duration: 9000,
           });
+          
+          newlyCrowdedIds.forEach(id => notifiedCrowdedLots.current.add(id));
 
           // Update status for suggested alternatives
           setFacilities((prevFacilities) => {
@@ -192,22 +187,32 @@ export function Dashboard() {
         }
       } catch (error) {
         console.error('Crowding analysis failed:', error);
-        // Optionally, inform the user that the analysis failed silently.
-        // toast({
-        //   title: 'Analysis Error',
-        //   description: 'Could not analyze parking data.',
-        //   variant: 'destructive',
-        // });
       }
     };
 
-    const hasCrowdedParking = facilities.some(
-      (f) => f.type === 'parking' && (f as Parking).status === 'crowded'
-    );
+    const allParkingLots = facilities.filter(f => f.type === 'parking') as Parking[];
     
-    if (hasCrowdedParking) {
-      checkCrowding();
+    const newlyCrowdedLots = allParkingLots.filter(
+      (f) => f.status === 'crowded' && !notifiedCrowdedLots.current.has(f.id)
+    );
+
+    if (newlyCrowdedLots.length > 0) {
+      const parkingData = allParkingLots
+        .map((park) => `${park.name}: ${park.occupancy}/${park.capacity} (${park.status})`)
+        .join('\n');
+      
+      const newlyCrowdedIds = newlyCrowdedLots.map(f => f.id);
+      checkCrowding(parkingData, newlyCrowdedIds);
     }
+    
+    // Clean up notified lots that are no longer crowded
+    const currentlyCrowdedIds = new Set(allParkingLots.filter(f => f.status === 'crowded').map(f => f.id));
+    notifiedCrowdedLots.current.forEach(id => {
+        if (!currentlyCrowdedIds.has(id)) {
+            notifiedCrowdedLots.current.delete(id);
+        }
+    });
+
   }, [facilities, toast]);
 
 
@@ -337,7 +342,3 @@ function FilterButton({ filter, activeFilter, setFilter, icon: Icon, children }:
         </SidebarMenuItem>
     )
 }
-
-    
-
-    
