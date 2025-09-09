@@ -13,7 +13,7 @@ import {
   DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Loader2, MessageCircle, Send, Volume2, Mic } from "lucide-react";
+import { Loader2, MessageCircle, Send } from "lucide-react";
 import { chat } from "@/ai/flows/chatbot";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "./ui/avatar";
@@ -22,7 +22,6 @@ import type { Position, Route } from "@/types";
 interface Message {
   role: "user" | "model";
   content: string;
-  audio?: string;
   id: string;
 }
 
@@ -40,11 +39,7 @@ export function ChatbotDialog({ open, onOpenChange, userPosition, onLocateFacili
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isListening, setIsListening] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const recognitionRef = useRef<any>(null);
-
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -54,53 +49,6 @@ export function ChatbotDialog({ open, onOpenChange, userPosition, onLocateFacili
       });
     }
   }, [messages]);
-  
-  useEffect(() => {
-    const lastMessage = messages[messages.length -1];
-    if (lastMessage?.role === 'model' && lastMessage.audio) {
-        if(audioRef.current) {
-            audioRef.current.src = lastMessage.audio;
-            audioRef.current.play().catch(e => console.error("Audio playback failed", e));
-        }
-    }
-  }, [messages]);
-
-  useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.lang = 'hi-IN';
-      recognitionRef.current.interimResults = false;
-
-      recognitionRef.current.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setInput(transcript);
-        setIsListening(false);
-      };
-
-      recognitionRef.current.onerror = (event: any) => {
-        console.error("Speech recognition error", event.error);
-        setIsListening(false);
-      };
-
-      recognitionRef.current.onend = () => {
-        setIsListening(false);
-      };
-    }
-  }, []);
-
-  const handleMicClick = () => {
-    if (!recognitionRef.current) return;
-
-    if (isListening) {
-      recognitionRef.current.stop();
-    } else {
-      recognitionRef.current.start();
-      setIsListening(true);
-    }
-  };
-
 
   const handleSend = async () => {
     if (input.trim() === "") return;
@@ -133,8 +81,7 @@ export function ChatbotDialog({ open, onOpenChange, userPosition, onLocateFacili
             const lastMsg = prev[prev.length - 1];
             if (lastMsg.id === modelMessageId && lastMsg.role === 'model') {
                 const newContent = lastMsg.content + (chunk.text || '');
-                const newAudio = chunk.audio || lastMsg.audio;
-                return [...prev.slice(0, -1), { ...lastMsg, content: newContent, audio: newAudio }];
+                return [...prev.slice(0, -1), { ...lastMsg, content: newContent }];
             }
             return prev;
         });
@@ -173,7 +120,7 @@ export function ChatbotDialog({ open, onOpenChange, userPosition, onLocateFacili
         <DialogHeader>
           <DialogTitle className="font-headline">Simhastha Margdarshak</DialogTitle>
           <DialogDescription>
-            Your AI guide for Simhastha 2028. Ask me anything, or use the mic to speak.
+            Your AI guide for Simhastha 2028. Ask me anything.
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
@@ -200,9 +147,6 @@ export function ChatbotDialog({ open, onOpenChange, userPosition, onLocateFacili
                   )}
                 >
                     <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                    {message.audio && (
-                        <Volume2 className="h-4 w-4 mt-2 text-muted-foreground" />
-                    )}
                 </div>
                 {message.role === "user" && (
                   <Avatar className="w-8 h-8">
@@ -229,21 +173,11 @@ export function ChatbotDialog({ open, onOpenChange, userPosition, onLocateFacili
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                placeholder={isListening ? "Listening..." : "Type your message..."}
-                className="pr-20"
+                placeholder="Type your message..."
+                className="pr-12"
                 disabled={isLoading}
                 />
                 <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center">
-                    <Button
-                        type="button"
-                        size="icon"
-                        variant="ghost"
-                        onClick={handleMicClick}
-                        disabled={isLoading || !recognitionRef.current}
-                        className={cn("h-8 w-8", isListening && "text-destructive")}
-                    >
-                        <Mic className="h-4 w-4" />
-                    </Button>
                     <Button
                     type="submit"
                     size="icon"
@@ -256,7 +190,6 @@ export function ChatbotDialog({ open, onOpenChange, userPosition, onLocateFacili
                 </div>
             </div>
         </div>
-        <audio ref={audioRef} className="hidden" />
       </DialogContent>
     </Dialog>
   );
