@@ -158,40 +158,55 @@ export function Dashboard() {
   // Crowding analysis
   React.useEffect(() => {
     const checkCrowding = async () => {
-        const parkingData = facilities
-            .filter(f => f.type === 'parking')
-            .map(f => {
-                const park = f as Parking;
-                return `${park.name}: ${park.occupancy}/${park.capacity} (${park.status})`;
-            })
-            .join('\n');
+      const parkingData = facilities
+        .filter((f) => f.type === 'parking')
+        .map((f) => {
+          const park = f as Parking;
+          return `${park.name}: ${park.occupancy}/${park.capacity} (${park.status})`;
+        })
+        .join('\n');
 
-        const result = await analyzeParkingCrowding({ parkingData });
+      try {
+        const result = await analyzeParkingCrowding({parkingData});
 
         if (result.isCrowded) {
-            toast({
-                title: "Parking Alert",
-                description: `Crowding detected. Suggested alternatives: ${result.suggestedAlternatives}`,
-                variant: "destructive",
-                duration: 9000,
-            });
+          toast({
+            title: 'Parking Alert',
+            description: `Crowding detected. Suggested alternatives: ${result.suggestedAlternatives}`,
+            variant: 'destructive',
+            duration: 9000,
+          });
 
-            // Update status for suggested alternatives
-            setFacilities(prevFacilities => {
-                const alternatives = result.suggestedAlternatives.split(',').map(s => s.trim());
-                return prevFacilities.map(f => {
-                    if (f.type === 'parking' && alternatives.includes(f.name)) {
-                        return { ...f, status: 'alternative' as Parking['status'] };
-                    }
-                    return f;
-                });
+          // Update status for suggested alternatives
+          setFacilities((prevFacilities) => {
+            const alternatives = result.suggestedAlternatives
+              .split(',')
+              .map((s) => s.trim());
+            return prevFacilities.map((f) => {
+              if (f.type === 'parking' && alternatives.includes(f.name)) {
+                return {...f, status: 'alternative' as Parking['status']};
+              }
+              return f;
             });
+          });
         }
+      } catch (error) {
+        console.error('Crowding analysis failed:', error);
+        // Optionally, inform the user that the analysis failed silently.
+        // toast({
+        //   title: 'Analysis Error',
+        //   description: 'Could not analyze parking data.',
+        //   variant: 'destructive',
+        // });
+      }
     };
 
-    const crowdedParking = facilities.find(f => f.type === 'parking' && (f as Parking).status === 'crowded');
-    if (crowdedParking) {
-        checkCrowding();
+    const hasCrowdedParking = facilities.some(
+      (f) => f.type === 'parking' && (f as Parking).status === 'crowded'
+    );
+    
+    if (hasCrowdedParking) {
+      checkCrowding();
     }
   }, [facilities, toast]);
 
@@ -322,5 +337,7 @@ function FilterButton({ filter, activeFilter, setFilter, icon: Icon, children }:
         </SidebarMenuItem>
     )
 }
+
+    
 
     
