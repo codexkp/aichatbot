@@ -43,7 +43,7 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
   const mapInstanceRef = React.useRef<L.Map | null>(null);
   const markerLayerRef = React.useRef<LayerGroup | null>(null);
   const userMarkerRef = React.useRef<LeafletMarker | null>(null);
-  const destinationMarkerRef = React.useRef<LeafletMarker | null>(null);
+  const routingControlRef = React.useRef<Control.Routing | null>(null);
 
 
   // Initialize map and handle its destruction
@@ -65,17 +65,18 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
     return () => {
         const map = mapInstanceRef.current;
         if (map) {
-            // Remove layers and markers
+            // Remove routing control FIRST
+            if (routingControlRef.current) {
+                routingControlRef.current.remove();
+                routingControlRef.current = null;
+            }
+            // Then remove other layers and markers
             if (markerLayerRef.current) {
                 markerLayerRef.current.clearLayers();
             }
             if (userMarkerRef.current) {
                 userMarkerRef.current.remove();
                 userMarkerRef.current = null;
-            }
-             if (destinationMarkerRef.current) {
-                destinationMarkerRef.current.remove();
-                destinationMarkerRef.current = null;
             }
 
             // Finally, remove the map
@@ -126,26 +127,38 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
       });
   }, [facilities, selectedFacility, onSelectFacility]);
 
-  // Effect to draw or clear the route destination
+  // Effect to draw or clear the route
   React.useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
 
-    // Clear previous destination if it exists
-    if (destinationMarkerRef.current) {
-        destinationMarkerRef.current.remove();
-        destinationMarkerRef.current = null;
+    // Clear previous route if it exists
+    if (routingControlRef.current) {
+        routingControlRef.current.remove();
+        routingControlRef.current = null;
     }
 
     if (route) {
-        const destination = new LatLng(route.destination.lat, route.destination.lng);
-        destinationMarkerRef.current = new LeafletMarker(destination, {
-              icon: createCustomIcon({ type: 'destination' }, true),
-              draggable: false,
-              zIndexOffset: 1000,
-        }).addTo(map);
+        const waypoints = [
+            L.latLng(route.start.lat, route.start.lng),
+            L.latLng(route.destination.lat, route.destination.lng)
+        ];
 
-        map.fitBounds(L.latLngBounds([route.start, route.destination]), {padding: [50, 50]});
+        const routingControl = L.Routing.control({
+            waypoints,
+            // We use our own markers, so we make the default ones invisible.
+            createMarker: () => null,
+            lineOptions: {
+                styles: [{ color: '#0ea5e9', opacity: 0.8, weight: 6 }],
+                addWaypoints: false,
+            },
+            // Disable the default instruction container
+            show: false,
+        }).addTo(map);
+        
+        routingControlRef.current = routingControl;
+
+        map.fitBounds(L.latLngBounds(waypoints), {padding: [50, 50]});
     }
   }, [route]);
   

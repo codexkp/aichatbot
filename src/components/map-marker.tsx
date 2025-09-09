@@ -6,7 +6,7 @@ import type { AnyFacility, Parking, EmergencyService } from '@/types';
 import { cn } from '@/lib/utils';
 
 interface MapMarkerProps {
-  facility: AnyFacility | { type: 'user' } | { type: 'destination' };
+  facility: AnyFacility | { type: 'user' };
   isSelected: boolean;
 }
 
@@ -26,9 +26,6 @@ export const MapMarker = ({ facility, isSelected }: MapMarkerProps) => {
     const pinClasses = "after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:top-[90%] after:border-8 after:border-t-[12px] after:border-transparent";
 
     const getIcon = () => {
-        if (facility.type === 'destination') {
-            return <MapPin className="w-5 h-5" />;
-        }
         switch (facility.type) {
             case 'parking':
                 return <ParkingCircle className="w-5 h-5" />;
@@ -53,9 +50,6 @@ export const MapMarker = ({ facility, isSelected }: MapMarkerProps) => {
     };
 
     const getColorClasses = () => {
-         if (facility.type === 'destination') {
-            return 'bg-primary after:border-t-primary';
-        }
         if (facility.type === 'parking') {
             const parkingFacility = facility as Parking;
             switch (parkingFacility.status) {
