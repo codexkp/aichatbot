@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -27,7 +28,7 @@ const AnalyzeParkingCrowdingOutputSchema = z.object({
   suggestedAlternatives: z
     .string()
     .describe(
-      'A list of suggested alternative parking locations, if crowding is detected.'
+      'A comma-separated list of suggested alternative parking locations, if crowding is detected. Should only include locations that are not already crowded.'
     ),
 });
 export type AnalyzeParkingCrowdingOutput = z.infer<
@@ -46,15 +47,14 @@ const prompt = ai.definePrompt({
   output: {schema: AnalyzeParkingCrowdingOutputSchema},
   prompt: `You are an AI assistant that analyzes parking data to detect unusual crowding and suggest alternative parking locations.
 
-  Analyze the following parking data:
+  Analyze the following parking data which is in the format 'Name: occupancy/capacity (status)':
   {{parkingData}}
 
-  Determine if there is unusual crowding based on the occupancy rates and historical data. If crowding is detected, suggest alternative parking locations.
-
-  The output should be formatted as a JSON object with the following keys:
-  - isCrowded: true if unusual crowding is detected, false otherwise.
-  - suggestedAlternatives: a comma-separated list of alternative parking locations, or an empty string if no alternatives are available.
-  \n  Make sure to set suggestedAlternatives to an empty string if no alternatives are available.
+  A parking lot is considered 'crowded' if its status is 'crowded'.
+  If you detect any crowded parking lots, set isCrowded to true.
+  If isCrowded is true, suggest 2-3 alternative parking locations from the list that are not themselves crowded.
+  The suggested alternatives should be a comma-separated string of names.
+  If no crowding is detected, set isCrowded to false and suggestedAlternatives to an empty string.
   `,
 });
 
@@ -69,3 +69,5 @@ const analyzeParkingCrowdingFlow = ai.defineFlow(
     return output!;
   }
 );
+
+    

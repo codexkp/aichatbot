@@ -379,3 +379,5 @@ export const initialFacilities: AnyFacility[] = [
     ...ghatFacilities,
     ...akhadaFacilities,
 ];
+
+    

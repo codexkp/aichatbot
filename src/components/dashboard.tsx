@@ -28,6 +28,7 @@ import { Loader2, Navigation, ParkingCircle, Hotel, Siren, Crosshair, Search, Wa
 import { useToast } from "@/hooks/use-toast";
 import { ChatbotDialog } from "@/components/smart-report-dialog";
 import { cn } from "@/lib/utils";
+import { analyzeParkingCrowding } from "@/ai/flows/crowding-analysis-and-alert";
 
 const MapView = dynamic(() => import('@/components/map-view'), {
   ssr: false,
@@ -116,6 +117,84 @@ export function Dashboard() {
       { enableHighAccuracy: true }
     );
   }, [toast]);
+
+  // Real-time data simulation
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setFacilities(prevFacilities => {
+        const updatedFacilities = prevFacilities.map(f => {
+          if (f.type === 'parking') {
+            const change = Math.floor(Math.random() * 20) - 10; // -10 to +10
+            let newOccupancy = f.occupancy + change;
+            if (newOccupancy < 0) newOccupancy = 0;
+            if (newOccupancy > f.capacity) newOccupancy = f.capacity;
+            
+            const occupancyRate = newOccupancy / f.capacity;
+            let newStatus: Parking['status'] = 'normal';
+            if (occupancyRate > 0.95) {
+                newStatus = 'crowded';
+            }
+            
+            return { ...f, occupancy: newOccupancy, status: newStatus };
+          }
+          return f;
+        });
+
+        // Update selected facility details if it's a parking facility
+        if (selectedFacility && selectedFacility.type === 'parking') {
+          const updatedSelected = updatedFacilities.find(f => f.id === selectedFacility.id);
+          if (updatedSelected) {
+            setSelectedFacility(updatedSelected);
+          }
+        }
+        
+        return updatedFacilities;
+      });
+    }, 10000); // every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [selectedFacility]);
+
+  // Crowding analysis
+  React.useEffect(() => {
+    const checkCrowding = async () => {
+        const parkingData = facilities
+            .filter(f => f.type === 'parking')
+            .map(f => {
+                const park = f as Parking;
+                return `${park.name}: ${park.occupancy}/${park.capacity} (${park.status})`;
+            })
+            .join('\n');
+
+        const result = await analyzeParkingCrowding({ parkingData });
+
+        if (result.isCrowded) {
+            toast({
+                title: "Parking Alert",
+                description: `Crowding detected. Suggested alternatives: ${result.suggestedAlternatives}`,
+                variant: "destructive",
+                duration: 9000,
+            });
+
+            // Update status for suggested alternatives
+            setFacilities(prevFacilities => {
+                const alternatives = result.suggestedAlternatives.split(',').map(s => s.trim());
+                return prevFacilities.map(f => {
+                    if (f.type === 'parking' && alternatives.includes(f.name)) {
+                        return { ...f, status: 'alternative' as Parking['status'] };
+                    }
+                    return f;
+                });
+            });
+        }
+    };
+
+    const crowdedParking = facilities.find(f => f.type === 'parking' && (f as Parking).status === 'crowded');
+    if (crowdedParking) {
+        checkCrowding();
+    }
+  }, [facilities, toast]);
+
 
   const showMap = activeFilter === 'all' && !isChatbotOpen;
 
@@ -243,3 +322,5 @@ function FilterButton({ filter, activeFilter, setFilter, icon: Icon, children }:
         </SidebarMenuItem>
     )
 }
+
+    
