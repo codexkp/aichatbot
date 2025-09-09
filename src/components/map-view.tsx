@@ -50,8 +50,8 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
       const map = L.map(mapRef.current).setView(ujjainCenter, defaultZoom);
       mapInstanceRef.current = map;
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      L.tileLayer('http://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+        attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a>'
       }).addTo(map);
 
       markerLayerRef.current = layerGroup().addTo(map);
@@ -144,7 +144,7 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
 
     } else {
         if (routeControlRef.current) {
-            mapInstanceRef.current.removeControl(routeControlRef.current);
+            mapInstanceRef.current.removeControl(routeControl-ref.current);
             routeControlRef.current = null;
         }
     }
