@@ -45,13 +45,14 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
   const userMarkerRef = React.useRef<LeafletMarker | null>(null);
   const routeControlRef = React.useRef<L.Routing.Control | null>(null);
 
+  // Initialize map
   React.useEffect(() => {
     if (mapRef.current && !mapInstanceRef.current) {
       const map = L.map(mapRef.current).setView(ujjainCenter, defaultZoom);
       mapInstanceRef.current = map;
 
-      L.tileLayer('http://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-        attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a>'
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
 
       markerLayerRef.current = layerGroup().addTo(map);
@@ -65,9 +66,12 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
     };
   }, []);
   
-  // Effect for user position marker
+  // Effect for user position marker - separated for reliability
   React.useEffect(() => {
-    if (mapInstanceRef.current && userPosition) {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    if (userPosition) {
       const userIcon = createCustomIcon({ type: 'user' }, false);
       if (userMarkerRef.current) {
         userMarkerRef.current.setLatLng([userPosition.lat, userPosition.lng]);
@@ -75,12 +79,13 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
       } else {
         const marker = new LeafletMarker([userPosition.lat, userPosition.lng], {
           icon: userIcon,
-          zIndexOffset: 1000
+          zIndexOffset: 1000 // Ensure it's on top
         });
-        marker.addTo(mapInstanceRef.current);
+        marker.addTo(map);
         userMarkerRef.current = marker;
       }
-    } else if (userMarkerRef.current && mapInstanceRef.current) {
+    } else if (userMarkerRef.current) {
+        // If userPosition becomes null, remove the marker
         userMarkerRef.current.remove();
         userMarkerRef.current = null;
     }
@@ -107,11 +112,13 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
   React.useEffect(() => {
     if (!mapInstanceRef.current) return;
 
-    if (route) {
-        if (routeControlRef.current) {
-            mapInstanceRef.current.removeControl(routeControlRef.current);
-        }
+    // Clear existing route first
+    if (routeControlRef.current) {
+        mapInstanceRef.current.removeControl(routeControlRef.current);
+        routeControlRef.current = null;
+    }
 
+    if (route) {
         const start = new LatLng(route.start.lat, route.start.lng);
         const destination = new LatLng(route.destination.lat, route.destination.lng);
 
@@ -123,30 +130,25 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
             createMarker: (waypointIndex, waypoint, numberOfWaypoints) => {
                 const isStart = waypointIndex === 0;
                 
+                // Don't create a marker for the start point if it's the user's location,
+                // as the dedicated user marker already exists.
                 if (isStart) {
                     const isUserLocation = userPosition && waypoint.latLng.lat === userPosition.lat && waypoint.latLng.lng === userPosition.lng;
-                    if (isUserLocation) {
-                        // Let the dedicated user marker handle this. Don't create a route marker for it.
-                        return null;
-                    }
+                    if (isUserLocation) return null;
+
                     const startFacility = facilities.find(f => f.position.lat === waypoint.latLng.lat && f.position.lng === waypoint.latLng.lng);
                     if(startFacility){
                         return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon(startFacility, true), draggable: false, zIndexOffset: 1000 });
                     }
-                } else { // It's the destination
+                } 
+                // Create a marker for the destination
+                else { 
                     return new LeafletMarker(waypoint.latLng, { icon: createCustomIcon({ type: 'destination' }, true), draggable: false, zIndexOffset: 1000 });
                 }
                 
-                // Fallback to a standard marker if no facility matches.
-                return new LeafletMarker(waypoint.latLng, {draggable: false});
+                return null; // Don't create default markers
             }
         }).addTo(mapInstanceRef.current);
-
-    } else {
-        if (routeControlRef.current) {
-            mapInstanceRef.current.removeControl(routeControl-ref.current);
-            routeControlRef.current = null;
-        }
     }
   }, [route, userPosition, facilities]);
   
@@ -162,15 +164,17 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
     }
   }, [center]);
 
-  // Effect to update selected marker styling
+  // Effect to update selected marker styling (without re-drawing all markers)
   React.useEffect(() => {
-    if (mapInstanceRef.current && markerLayerRef.current) {
+    if (markerLayerRef.current) {
         markerLayerRef.current.eachLayer(l => {
             const marker = l as LeafletMarker;
+            // A bit of a hack: find the corresponding facility from the original array
             const facility = facilities.find(f => 
                 f.position.lat === marker.getLatLng().lat && 
                 f.position.lng === marker.getLatLng().lng
             );
+            
             if (facility) {
                 const isSelected = selectedFacility?.id === facility.id;
                 marker.setIcon(createCustomIcon(facility, isSelected));
