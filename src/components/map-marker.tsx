@@ -14,8 +14,9 @@ export const MapMarker = ({ facility, isSelected }: MapMarkerProps) => {
     if (facility.type === 'user') {
         return (
             <div className="relative flex items-center justify-center">
-                <div className="w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow-md"></div>
-                <div className="absolute w-4 h-4 rounded-full bg-blue-500 animate-ping"></div>
+                <div className="w-6 h-6 rounded-full bg-blue-500/30 flex items-center justify-center">
+                    <div className="w-3 h-3 rounded-full bg-blue-600 border-2 border-white shadow-md"></div>
+                </div>
             </div>
         );
     }
