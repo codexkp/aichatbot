@@ -77,6 +77,7 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
     return () => {
         const map = mapInstanceRef.current;
         if (map) {
+            // Remove controls in a safe way
             if (routeControlRef.current) {
                 map.removeControl(routeControlRef.current);
                 routeControlRef.current = null;
@@ -85,6 +86,17 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
                 map.removeControl(layerControlRef.current);
                 layerControlRef.current = null;
             }
+
+            // Remove layers and markers
+            if (markerLayerRef.current) {
+                markerLayerRef.current.clearLayers();
+            }
+            if (userMarkerRef.current) {
+                userMarkerRef.current.remove();
+                userMarkerRef.current = null;
+            }
+
+            // Finally, remove the map
             map.remove();
             mapInstanceRef.current = null;
         }
@@ -139,8 +151,8 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
 
     // Clear previous route if it exists
     if (routeControlRef.current) {
-      map.removeControl(routeControlRef.current);
-      routeControlRef.current = null;
+        map.removeControl(routeControlRef.current);
+        routeControlRef.current = null;
     }
 
     if (route) {
@@ -227,3 +239,5 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
 
   return <div ref={mapRef} className='w-full h-full' />;
 }
+
+    

@@ -216,7 +216,7 @@ export function Dashboard() {
   }, [facilities, toast]);
 
 
-  const showMap = activeFilter === 'all' && !isChatbotOpen;
+  const showMap = activeFilter === 'all';
 
   return (
     <SidebarProvider>
@@ -290,7 +290,7 @@ export function Dashboard() {
           </div>
         </Header>
         <div className="flex-1 relative">
-           {showMap ? (
+           {showMap && !isChatbotOpen ? (
             <div className="w-full h-full">
               <MapView
                   facilities={filteredFacilities}
@@ -342,3 +342,5 @@ function FilterButton({ filter, activeFilter, setFilter, icon: Icon, children }:
         </SidebarMenuItem>
     )
 }
+
+    
