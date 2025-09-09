@@ -163,13 +163,6 @@ export function Dashboard() {
         const result = await analyzeParkingCrowding({parkingData});
 
         if (result.isCrowded) {
-          toast({
-            title: 'Parking Alert',
-            description: `Crowding detected. Suggested alternatives: ${result.suggestedAlternatives}`,
-            variant: 'destructive',
-            duration: 9000,
-          });
-          
           newlyCrowdedIds.forEach(id => notifiedCrowdedLots.current.add(id));
 
           // Update status for suggested alternatives
@@ -342,5 +335,7 @@ function FilterButton({ filter, activeFilter, setFilter, icon: Icon, children }:
         </SidebarMenuItem>
     )
 }
+
+    
 
     
