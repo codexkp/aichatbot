@@ -117,7 +117,7 @@ export function Dashboard() {
     );
   }, [toast]);
 
-  const showMap = activeFilter === 'all';
+  const showMap = activeFilter === 'all' && !isChatbotOpen;
 
   return (
     <SidebarProvider>
