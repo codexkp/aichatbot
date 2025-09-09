@@ -49,6 +49,8 @@ export function Dashboard() {
   const handleSelectFacility = React.useCallback((facility: AnyFacility) => {
     setSelectedFacility(facility);
     setRoute(null);
+    setActiveFilter("all");
+    setMapCenter(facility.position);
   }, []);
 
   const handleLocateFacility = React.useCallback((facilityId: string) => {
@@ -88,8 +90,10 @@ export function Dashboard() {
 
 
   React.useEffect(() => {
-    setSelectedFacility(null);
-    setRoute(null);
+    if (activeFilter !== "all") {
+      setSelectedFacility(null);
+      setRoute(null);
+    }
   }, [activeFilter]);
   
   React.useEffect(() => {
@@ -162,7 +166,11 @@ export function Dashboard() {
                         <FacilityCard facility={selectedFacility} />
                     ) : (
                         <div className="text-center text-sm text-muted-foreground p-4 border-dashed border rounded-lg">
-                            <p>Select a facility on the map or list to see details.</p>
+                           {activeFilter === 'all' ? (
+                             <p>Select a facility on the map to see details.</p>
+                           ) : (
+                              <p>Select a facility from the list to see details.</p>
+                           )}
                         </div>
                     )}
                 </div>
@@ -204,7 +212,7 @@ export function Dashboard() {
             <div className="w-full h-full bg-muted p-4 overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredFacilities.map(facility => (
-                  <button key={facility.id} onClick={() => handleSelectFacility(facility)} className="w-full text-left">
+                  <button key={facility.id} onClick={() => setSelectedFacility(facility)} className="w-full text-left">
                      <FacilityCard facility={facility} />
                   </button>
                 ))}
