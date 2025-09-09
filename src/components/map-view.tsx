@@ -50,12 +50,8 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
   // Initialize map and handle its destruction
   React.useEffect(() => {
     if (mapRef.current && !mapInstanceRef.current) {
-      const streetLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-        attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a>'
-      });
-      
-      const satelliteLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
-        attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a>'
+      const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       });
       
       const map = L.map(mapRef.current, {
@@ -63,13 +59,6 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
       }).setView(ujjainCenter, defaultZoom);
       mapInstanceRef.current = map;
       
-      const baseMaps = {
-          "Streets": streetLayer,
-          "Satellite": satelliteLayer
-      };
-
-      layerControlRef.current = L.control.layers(baseMaps).addTo(map);
-
       markerLayerRef.current = layerGroup().addTo(map);
     }
 

@@ -31,13 +31,19 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'mt.google.com',
+        hostname: 'a.tile.openstreetmap.org',
         port: '',
         pathname: '/**',
       },
-       {
+      {
         protocol: 'https',
-        hostname: 'mt1.google.com',
+        hostname: 'b.tile.openstreetmap.org',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'c.tile.openstreetmap.org',
         port: '',
         pathname: '/**',
       }
