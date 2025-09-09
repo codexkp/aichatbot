@@ -62,9 +62,7 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
     return () => {
         // As per recommendation, destroy control first, then map.
         if (routeControlRef.current) {
-            // The 'remove' method handles removing the control from the map.
             routeControlRef.current.remove();
-            routeControlRef.current = null;
         }
         if (mapInstanceRef.current) {
             mapInstanceRef.current.remove();
