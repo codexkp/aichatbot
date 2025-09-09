@@ -62,7 +62,7 @@ export async function* chat(input: ChatInput): ChatOutput {
     `;
 
   if (userPosition) {
-    systemPrompt += `\nThe user's current location is available and is at ${userPosition.lat},${userPosition.lng}. When the user asks for directions from 'here' or their 'current location', use these coordinates as the starting point. This is the priority starting point.`;
+    systemPrompt += `\nThe user's current location is available at ${userPosition.lat},${userPosition.lng}. For any route request, ALWAYS use these coordinates as the starting point. Do not ask for a starting location.`;
   } else {
     systemPrompt += `\nThe user's location has not been shared. If the user asks for directions without specifying a starting point, you must ask them for a starting facility from the available list. Do not try to guess their location.`;
   }
