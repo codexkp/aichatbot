@@ -66,9 +66,9 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
     return () => {
         const map = mapInstanceRef.current;
         if (map) {
-            // Remove controls in a safe way
+            // CRUCIAL: Remove routing control BEFORE destroying the map.
             if (routeControlRef.current) {
-                map.removeControl(routeControlRef.current);
+                routeControlRef.current.remove(); // This safely removes the control from the map
                 routeControlRef.current = null;
             }
             if(layerControlRef.current){
@@ -140,7 +140,7 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
 
     // Clear previous route if it exists
     if (routeControlRef.current) {
-        map.removeControl(routeControlRef.current);
+        routeControlRef.current.remove();
         routeControlRef.current = null;
     }
 
@@ -228,5 +228,3 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
 
   return <div ref={mapRef} className='w-full h-full' />;
 }
-
-    
