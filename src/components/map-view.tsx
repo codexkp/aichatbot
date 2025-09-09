@@ -131,6 +131,8 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
                 addWaypoints: false,
             },
             show: false, // Disable the default instruction container
+        }).on('routingerror', (e) => {
+            console.log('Could not find a route.');
         }).addTo(map);
         
         routingControlRef.current = routingControl;
@@ -152,25 +154,21 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
 
     // == MASTER CLEANUP FUNCTION ==
     return () => {
-      if (map.getContainer()._leaflet_id) { // Check if map is initialized
-        if (routingControlRef.current) {
+      // This cleanup runs when dependencies change, or on unmount
+      if (routingControlRef.current) {
           routingControlRef.current.remove();
           routingControlRef.current = null;
-        }
       }
     };
     // This effect re-runs whenever its dependencies change.
-    // The cleanup function will always run *before* the effect runs again,
-    // ensuring a clean state for each render.
   }, [facilities, selectedFacility, userPosition, center, route, onSelectFacility]);
 
   // A separate effect just for unmounting the component and destroying the map.
   React.useEffect(() => {
+    const map = mapInstanceRef.current;
     return () => {
-      if (mapInstanceRef.current) {
-          // This calls the cleanup of the main effect first if needed,
-          // then destroys the map.
-          mapInstanceRef.current.remove();
+      if (map) {
+          map.remove();
           mapInstanceRef.current = null;
           // Clear all refs
           facilityMarkersRef.current = {};
@@ -183,5 +181,3 @@ export default function MapView({ facilities, onSelectFacility, selectedFacility
 
   return <div ref={mapRef} className='w-full h-full' />;
 }
-
-    
